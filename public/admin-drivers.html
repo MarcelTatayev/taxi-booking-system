@@ -2288,7 +2288,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                                 
                                 <div class="flex-center">
                                     <label style="font-weight: 600; color: #2c3e50;">Tijdslimiet:</label>
-                                    <input type="number" id="defaultLastMinuteHours" step="0.5" min="0.5" max="24" 
+                                    <input type="number" id="defaultLastMinuteHours" step="0.5" min="0" max="24" 
                                            placeholder="3" onchange="updateDefaultLastMinuteSettings()" value="3"
                                            style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; width: 80px;">
                                     <span style="font-weight: 600; color: #2c3e50;">uur</span>
@@ -4391,7 +4391,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                     const lastMinuteSettings = {
                         type: typeElement.value,
                         amount: parseFloat(amountElement.value) || 25,
-                        hours: parseFloat(hoursElement.value) || 3
+                        hours: parseFloat(hoursElement.value !== '' ? hoursElement.value : 3)
                     };
                     
                     localStorage.setItem('defaultLastMinuteSettings', JSON.stringify(lastMinuteSettings));
@@ -13613,7 +13613,7 @@ Both bookings added to confirmed bookings list!`;
             
             const type = typeElement.value;
             const amount = parseFloat(amountElement.value) || 25;
-            const hours = parseFloat(hoursElement.value) || 3;
+            const hours = parseFloat(hoursElement.value !== '' ? hoursElement.value : 3);
             
             // Update symbol if element exists
             if (symbolElement) {
