@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcel's Taxi - Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            height: 100vh;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        /* Sidebar */
+        .chat-sidebar {
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #34495e;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .user-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .status-selector {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        .status-option {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .status-option.active {
+            background: #007bff;
+        }
+
+        /* Conversations List */
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .conversation-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .conversation-item:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .conversation-item.active {
+            background: rgba(255,255,255,0.2);
+            border-color: #007bff;
+        }
+
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .conversation-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .conversation-time {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .conversation-preview {
+            font-size: 14px;
+            opacity: 0.8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-badge {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 10px;
+        }
+
+        /* Chat Area */
+        .chat-main {
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .chat-contact {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .contact-avatar {
+            width: 45px;
+            height: 45px;
+            background: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .contact-info h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+
+        .contact-status {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f8f9fa;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            background: #e9ecef;
+        }
+
+        /* Messages Area */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafbfc;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 20px;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            background: #6c757d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            order: 1;
+        }
+
+        .message.sent .message-avatar {
+            order: 2;
+            background: #007bff;
+        }
+
+        .message-content {
+            max-width: 70%;
+            order: 2;
+        }
+
+        .message.sent .message-content {
+            order: 1;
+        }
+
+        .message-bubble {
+            background: white;
+            padding: 12px 18px;
+            border-radius: 18px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message.sent .message-bubble {
+            background: #007bff;
+            color: white;
+        }
+
+        .message-text {
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .message.sent .message-time {
+            color: rgba(255,255,255,0.7);
+            text-align: right;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 15px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #6c757d;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
+        }
+
+        /* Message Input */
+        .message-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 15px;
+            resize: none;
+            max-height: 120px;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .attachment-button {
+            width: 45px;
+            height: 45px;
+            border: none;
+            background: #f8f9fa;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .attachment-button:hover {
+            background: #e9ecef;
+        }
+
+        /* Empty State */
+        .empty-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .connection-status.offline {
+            background: #dc3545;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .chat-container {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-sidebar {
+                display: none;
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 80%;
+                height: 100vh;
+                z-index: 1000;
+            }
+
+            .chat-sidebar.mobile-open {
+                display: flex;
+            }
+
+            .mobile-menu-button {
+                display: block;
+            }
+        }
+
+        .mobile-menu-button {
+            display: none;
+        }
+
+        /* Quick Replies */
+        .quick-replies {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .quick-reply {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-reply:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="chat-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <div class="user-avatar" id="user-avatar">KL</div>
+                    <div class="user-info">
+                        <h3 id="user-name">Klant</h3>
+                        <p id="user-type">Customer</p>
+                    </div>
+                </div>
+                <div class="status-selector">
+                    <div class="status-option active" onclick="setUserType('customer')">Klant</div>
+                    <div class="status-option" onclick="setUserType('driver')">Chauffeur</div>
+                </div>
+            </div>
+
+            <div class="conversations-list" id="conversations-list">
+                <!-- Conversations will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-main">
+            <div id="empty-state" class="empty-chat">
+                <div class="empty-icon">💬</div>
+                <div class="empty-title">Selecteer een gesprek</div>
+                <div class="empty-text">Kies een gesprek uit de lijst om te beginnen met chatten</div>
+            </div>
+
+            <div id="chat-area" style="display: none; flex: 1; flex-direction: column;">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <button class="action-button mobile-menu-button" onclick="toggleSidebar()">☰</button>
+                    <div class="chat-contact">
+                        <div class="contact-avatar" id="contact-avatar">CH</div>
+                        <div class="contact-info">
+                            <h3 id="contact-name">Chauffeur</h3>
+                            <p class="contact-status" id="contact-status">Online</p>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="action-button" onclick="startCall()">📞</button>
+                        <button class="action-button" onclick="showInfo()">ℹ️</button>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="messages-container" id="messages-container">
+                    <!-- Messages will be loaded here -->
+                </div>
+
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span id="typing-text">Chauffeur is aan het typen...</span>
+                </div>
+
+                <!-- Quick Replies -->
+                <div class="quick-replies" id="quick-replies">
+                    <div class="quick-reply" onclick="sendQuickReply('Waar bent u?')">Waar bent u?</div>
+                    <div class="quick-reply" onclick="sendQuickReply('Ik sta buiten te wachten')">Ik sta buiten</div>
+                    <div class="quick-reply" onclick="sendQuickReply('Hoelang duurt het nog?')">Hoelang nog?</div>
+                    <div class="quick-reply" onclick="sendQuickReply('Bedankt!')">Bedankt!</div>
+                </div>
+
+                <!-- Message Input -->
+                <div class="message-input-container">
+                    <div class="input-wrapper">
+                        <button class="attachment-button" onclick="attachFile()">📎</button>
+                        <textarea 
+                            class="message-input" 
+                            id="message-input" 
+                            placeholder="Type een bericht..."
+                            rows="1"
+                            onkeypress="handleKeyPress(event)"
+                            oninput="handleInput()"
+                        ></textarea>
+                        <button class="send-button" id="send-button" onclick="sendMessage()" disabled>➤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status" id="connection-status">
+        <div class="status-dot"></div>
+        <span>Verbonden</span>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = 'customer';
+        let currentConversation = null;
+        let messages = {};
+        let conversations = [];
+        let typingTimeout = null;
+        let isTyping = false;
+
+        // Initialize
+        window.onload = function() {
+            checkAuth();
+            loadConversations();
+            setupWebSocket();
+            
+            // Auto-resize textarea
+            const textarea = document.getElementById('message-input');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+        };
+
+        // Check authentication
+        function checkAuth() {
+            const customerSession = localStorage.getItem('customerSession');
+            const driverSession = localStorage.getItem('driverSession');
+            
+            if (customerSession) {
+                const session = JSON.parse(customerSession);
+                document.getElementById('user-name').textContent = session.customerName;
+                document.getElementById('user-avatar').textContent = session.customerName.split(' ').map(n => n[0]).join('');
+                currentUser = 'customer';
+            } else if (driverSession) {
+                const session = JSON.parse(driverSession);
+                document.getElementById('user-name').textContent = session.driverName;
+                document.getElementById('user-avatar').textContent = session.driverName.split(' ').map(n => n[0]).join('');
+                currentUser = 'driver';
+                setUserType('driver');
+            } else {
+                // Demo mode
+                document.getElementById('user-name').textContent = 'Demo User';
+                document.getElementById('user-avatar').textContent = 'DU';
+            }
+        }
+
+        // Set user type (customer/driver)
+        function setUserType(type) {
+            currentUser = type;
+            document.querySelectorAll('.status-option').forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('user-type').textContent = type === 'customer' ? 'Customer' : 'Driver';
+            loadConversations();
+        }
+
+        // Load conversations
+        function loadConversations() {
+            // Demo conversations
+            conversations = [
+                {
+                    id: 'conv1',
+                    name: currentUser === 'customer' ? 'Chauffeur Jan' : 'Klant Anna',
+                    lastMessage: 'Ik ben onderweg!',
+                    time: '5 min',
+                    unread: 2,
+                    avatar: currentUser === 'customer' ? 'CJ' : 'KA',
+                    status: 'online',
+                    bookingId: 'BK123456'
+                },
+                {
+                    id: 'conv2',
+                    name: currentUser === 'customer' ? 'Chauffeur Piet' : 'Klant Bob',
+                    lastMessage: 'Bedankt voor de rit!',
+                    time: '1 uur',
+                    unread: 0,
+                    avatar: currentUser === 'customer' ? 'CP' : 'KB',
+                    status: 'offline',
+                    bookingId: 'BK123455'
+                },
+                {
+                    id: 'conv3',
+                    name: 'Support Team',
+                    lastMessage: 'Hoe kunnen we u helpen?',
+                    time: '2 uur',
+                    unread: 1,
+                    avatar: 'ST',
+                    status: 'online',
+                    bookingId: null
+                }
+            ];
+
+            renderConversations();
+        }
+
+        // Render conversations list
+        function renderConversations() {
+            const container = document.getElementById('conversations-list');
+            container.innerHTML = '';
+
+            conversations.forEach(conv => {
+                const item = document.createElement('div');
+                item.className = 'conversation-item';
+                item.onclick = () => selectConversation(conv);
+                
+                const unreadBadge = conv.unread > 0 ? `<span class="conversation-badge">${conv.unread}</span>` : '';
+                
+                item.innerHTML = `
+                    <div class="conversation-header">
+                        <div class="conversation-name">${conv.name}${unreadBadge}</div>
+                        <div class="conversation-time">${conv.time}</div>
+                    </div>
+                    <div class="conversation-preview">${conv.lastMessage}</div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        // Select conversation
+        function selectConversation(conversation) {
+            currentConversation = conversation;
+            
+            // Update UI
+            document.querySelectorAll('.conversation-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Show chat area
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('chat-area').style.display = 'flex';
+            
+            // Update header
+            document.getElementById('contact-name').textContent = conversation.name;
+            document.getElementById('contact-avatar').textContent = conversation.avatar;
+            document.getElementById('contact-status').textContent = conversation.status === 'online' ? 'Online' : 'Offline';
+            
+            // Load messages
+            loadMessages(conversation.id);
+            
+            // Clear unread
+            conversation.unread = 0;
+            renderConversations();
+        }
+
+        // Load messages for conversation
+        function loadMessages(conversationId) {
+            // Demo messages
+            if (!messages[conversationId]) {
+                messages[conversationId] = [
+                    {
+                        id: 1,
+                        text: 'Hallo! Ik ben uw chauffeur voor vandaag.',
+                        sent: false,
+                        time: '10:30',
+                        avatar: currentConversation.avatar
+                    },
+                    {
+                        id: 2,
+                        text: 'Ik ben over 5 minuten bij u.',
+                        sent: false,
+                        time: '10:31',
+                        avatar: currentConversation.avatar
+                    },
+                    {
+                        id: 3,
+                        text: 'Geweldig, ik sta voor de deur!',
+                        sent: true,
+                        time: '10:32',
+                        avatar: document.getElementById('user-avatar').textContent
+                    }
+                ];
+            }
+
+            renderMessages();
+        }
+
+        // Render messages
+        function renderMessages() {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+
+            const conversationMessages = messages[currentConversation.id] || [];
+            
+            conversationMessages.forEach(msg => {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${msg.sent ? 'sent' : 'received'}`;
+                
+                messageEl.innerHTML = `
+                    <div class="message-avatar">${msg.avatar}</div>
+                    <div class="message-content">
+                        <div class="message-bubble">
+                            <div class="message-text">${msg.text}</div>
+                        </div>
+                        <div class="message-time">${msg.time}</div>
+                    </div>
+                `;
+                
+                container.appendChild(messageEl);
+            });
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Send message
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            
+            if (!text || !currentConversation) return;
+
+            // Add message
+            const newMessage = {
+                id: Date.now(),
+                text: text,
+                sent: true,
+                time: new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+                avatar: document.getElementById('user-avatar').textContent
+            };
+
+            if (!messages[currentConversation.id]) {
+                messages[currentConversation.id] = [];
+            }
+            messages[currentConversation.id].push(newMessage);
+
+            // Update conversation
+            currentConversation.lastMessage = text;
+            currentConversation.time = 'Nu';
+            
+            // Clear input
+            input.value = '';
+            input.style.height = 'auto';
+            document.getElementById('send-button').disabled = true;
+
+            // Render
+            renderMessages();
+            renderConversations();
+
+            // Simulate response
+            simulateResponse();
+        }
+
+        // Send quick reply
+        function sendQuickReply(text) {
+            document.getElementById('message-input').value = text;
+            document.getElementById('send-button').disabled = false;
+            sendMessage();
+        }
+
+        // Simulate typing and response
+        function simulateResponse() {
+            // Show typing indicator
+            setTimeout(() => {
+                showTypingIndicator();
+            }, 1000);
+
+            // Send response
+            setTimeout(() => {
+                hideTypingIndicator();
+                
+                const responses = [
+                    'Ik begrijp het, ik zal er rekening mee houden.',
+                    'Geen probleem!',
+                    'Ik ben er bijna.',
+                    'Bedankt voor uw bericht.',
+                    'Prima, tot zo!'
+                ];
+                
+                const responseText = responses[Math.floor(Math.random() * responses.length)];
+                
+                const response = {
+                    id: Date.now(),
+                    text: responseText,
+                    sent: false,
+                    time: new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+                    avatar: currentConversation.avatar
+                };
+                
+                messages[currentConversation.id].push(response);
+                currentConversation.lastMessage = responseText;
+                currentConversation.time = 'Nu';
+                
+                renderMessages();
+                renderConversations();
+                
+                // Play notification sound
+                playNotificationSound();
+            }, 3000);
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            const text = document.getElementById('typing-text');
+            indicator.style.display = 'flex';
+            text.textContent = `${currentConversation.name} is aan het typen...`;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').style.display = 'none';
+        }
+
+        // Handle key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Handle input
+        function handleInput() {
+            const input = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            sendButton.disabled = !input.value.trim();
+            
+            // Send typing indicator
+            if (!isTyping && input.value.trim()) {
+                isTyping = true;
+                // In real app, send typing status to server
+            }
+            
+            // Clear typing timeout
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                isTyping = false;
+                // In real app, send stop typing to server
+            }, 1000);
+        }
+
+        // Setup WebSocket (simulated)
+        function setupWebSocket() {
+            // In real app, connect to WebSocket server
+            setInterval(() => {
+                const status = document.getElementById('connection-status');
+                // Simulate connection status
+                if (Math.random() > 0.95) {
+                    status.classList.add('offline');
+                    status.querySelector('span').textContent = 'Verbinding verbroken';
+                } else {
+                    status.classList.remove('offline');
+                    status.querySelector('span').textContent = 'Verbonden';
+                }
+            }, 5000);
+        }
+
+        // Play notification sound
+        function playNotificationSound() {
+            // In real app, play actual sound
+            console.log('🔔 New message notification');
+        }
+
+        // Start call
+        function startCall() {
+            if (currentConversation) {
+                alert(`Bellen met ${currentConversation.name}...\n\nDeze functie wordt binnenkort toegevoegd!`);
+            }
+        }
+
+        // Show info
+        function showInfo() {
+            if (currentConversation) {
+                alert(`Gesprek informatie:\n\nNaam: ${currentConversation.name}\nStatus: ${currentConversation.status}\nBooking: ${currentConversation.bookingId || 'N/A'}`);
+            }
+        }
+
+        // Attach file
+        function attachFile() {
+            alert('Bestand versturen wordt binnenkort toegevoegd!\n\nU kunt dan foto\'s en documenten delen.');
+        }
+
+        // Toggle sidebar (mobile)
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+    </script>
+</body>
+</html>
