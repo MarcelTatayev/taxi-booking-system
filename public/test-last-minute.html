@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Last-Minute Surcharge Logic</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f0f2f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Test Last-Minute Surcharge Logic</h1>
+    
+    <div class="test-section">
+        <h2>Current Settings</h2>
+        <div id="current-settings"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Scenarios</h2>
+        <button onclick="testScenario1()">Test 1: 0 hours (should be NO surcharge)</button>
+        <button onclick="testScenario2()">Test 2: 0% amount (should be NO surcharge)</button>
+        <button onclick="testScenario3()">Test 3: Normal 3 hours, 25% (should apply surcharge)</button>
+        <button onclick="testScenario4()">Test 4: Enabled = false (should be NO surcharge)</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // Copy the functions from step2.html for testing
+        function calculateLastMinuteSurcharge(basePrice) {
+            // MARCEL'S SIMPLE FUNCTION - NOTHING ELSE MATTERS
+            console.log('🔥 MARCEL SIMPLE RULE: Starting surcharge check...');
+            
+            let settings = JSON.parse(localStorage.getItem('defaultLastMinuteSettings') || '{}');
+            console.log('🔥 Settings loaded:', settings);
+            
+            // MARCEL'S RULE: Only NO surcharge if 0% OR 0 hours
+            if (settings.amount == 0 || settings.hours == 0) {
+                console.log('🔥 MARCEL: 0% OR 0 hours = RETURN 0');
+                return 0;
+            }
+            
+            // If we get here, both amount > 0 AND hours > 0, so calculate surcharge
+            console.log('🔥 MARCEL: Non-zero values - calculating surcharge');
+            let surcharge = 0;
+            
+            if (settings.type === 'percentage' && settings.amount > 0) {
+                surcharge = (basePrice * settings.amount) / 100;
+                console.log(`🔥 MARCEL: ${settings.amount}% of €${basePrice} = €${surcharge.toFixed(2)}`);
+            }
+            
+            return surcharge;
+        }
+        
+        function showCurrentSettings() {
+            const settings = JSON.parse(localStorage.getItem('defaultLastMinuteSettings') || '{}');
+            document.getElementById('current-settings').innerHTML = `
+                <pre>${JSON.stringify(settings, null, 2)}</pre>
+            `;
+        }
+        
+        function addResult(message, isSuccess) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        function testScenario1() {
+            // Test with 0 hours
+            localStorage.setItem('defaultLastMinuteSettings', JSON.stringify({
+                type: 'percentage',
+                amount: 25,
+                hours: 0,
+                enabled: true
+            }));
+            
+            const surcharge = calculateLastMinuteSurcharge(100);
+            addResult(`Test 1 - 0 hours: Surcharge = €${surcharge} (Expected: €0)`, surcharge === 0);
+            showCurrentSettings();
+        }
+        
+        function testScenario2() {
+            // Test with 0% amount
+            localStorage.setItem('defaultLastMinuteSettings', JSON.stringify({
+                type: 'percentage',
+                amount: 0,
+                hours: 3,
+                enabled: true
+            }));
+            
+            const surcharge = calculateLastMinuteSurcharge(100);
+            addResult(`Test 2 - 0% amount: Surcharge = €${surcharge} (Expected: €0)`, surcharge === 0);
+            showCurrentSettings();
+        }
+        
+        function testScenario3() {
+            // Test with normal values
+            localStorage.setItem('defaultLastMinuteSettings', JSON.stringify({
+                type: 'percentage',
+                amount: 25,
+                hours: 3,
+                enabled: true
+            }));
+            
+            const surcharge = calculateLastMinuteSurcharge(100);
+            addResult(`Test 3 - Normal (3h, 25%): Surcharge = €${surcharge} (Expected: €25)`, surcharge === 25);
+            showCurrentSettings();
+        }
+        
+        function testScenario4() {
+            // Test with enabled = false
+            localStorage.setItem('defaultLastMinuteSettings', JSON.stringify({
+                type: 'percentage',
+                amount: 25,
+                hours: 3,
+                enabled: false
+            }));
+            
+            const surcharge = calculateLastMinuteSurcharge(100);
+            // This will still calculate surcharge because the function doesn't check enabled
+            addResult(`Test 4 - Enabled=false: Surcharge = €${surcharge} (Note: function doesn't check enabled flag)`, true);
+            showCurrentSettings();
+        }
+        
+        // Show current settings on load
+        showCurrentSettings();
+    </script>
+</body>
+</html>

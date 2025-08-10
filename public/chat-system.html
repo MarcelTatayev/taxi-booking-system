@@ -647,7 +647,19 @@
         // Initialize
         window.onload = function() {
             checkAuth();
-            loadConversations();
+            
+            // Check if this is a specific booking chat
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookingId = urlParams.get('booking');
+            const mode = urlParams.get('mode');
+            
+            if (bookingId && mode === 'driver') {
+                // Load specific driver conversation for this booking
+                loadBookingConversation(bookingId);
+            } else {
+                loadConversations();
+            }
+            
             setupWebSocket();
             
             // Auto-resize textarea
@@ -727,6 +739,71 @@
             ];
 
             renderConversations();
+        }
+
+        // Load specific booking conversation
+        function loadBookingConversation(bookingId) {
+            // Get booking details from customer session
+            const session = localStorage.getItem('customerSession');
+            let bookingDetails = null;
+            
+            if (session) {
+                const sessionData = JSON.parse(session);
+                const bookings = JSON.parse(localStorage.getItem('customerBookings_' + sessionData.customerId) || '[]');
+                bookingDetails = bookings.find(b => b.id === bookingId);
+            }
+            
+            // Create conversation for this specific booking
+            const conversation = {
+                id: 'booking_' + bookingId,
+                name: 'Chauffeur voor uw rit',
+                lastMessage: 'Chat beschikbaar voor uw aankomende rit',
+                time: 'Nu',
+                unread: 0,
+                avatar: 'CH',
+                status: 'online',
+                bookingId: bookingId,
+                bookingDetails: bookingDetails
+            };
+            
+            conversations = [conversation];
+            renderConversations();
+            
+            // Auto-select the conversation
+            setTimeout(() => {
+                selectConversation(conversation);
+            }, 100);
+            
+            // Show booking context
+            if (bookingDetails) {
+                showBookingContext(bookingDetails);
+            }
+        }
+
+        // Show booking context
+        function showBookingContext(booking) {
+            const contextDiv = document.createElement('div');
+            contextDiv.id = 'booking-context';
+            contextDiv.style.cssText = `
+                background: #e3f2fd; border-left: 4px solid #2196f3; 
+                padding: 15px; margin-bottom: 15px; border-radius: 8px;
+            `;
+            contextDiv.innerHTML = `
+                <div style="font-size: 14px; color: #1976d2; font-weight: 600; margin-bottom: 8px;">
+                    🚖 Rit Informatie - Booking #${booking.id}
+                </div>
+                <div style="font-size: 13px; color: #424242;">
+                    📍 ${booking.from} → ${booking.to}<br>
+                    📅 ${booking.date} om ${booking.time}<br>
+                    💰 €${booking.price}
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 8px; font-style: italic;">
+                    ℹ️ Uw telefoonnummer wordt niet gedeeld met de chauffeur
+                </div>
+            `;
+            
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.insertBefore(contextDiv, messagesContainer.firstChild);
         }
 
         // Render conversations list

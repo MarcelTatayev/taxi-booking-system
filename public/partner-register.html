@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Registratie - Marcel's Taxi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .registration-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            overflow: hidden;
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .welcome-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .benefit-list {
+            list-style: none;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .benefit-icon {
+            width: 24px;
+            height: 24px;
+            background: #27ae60;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 14px;
+        }
+
+        .form-section {
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            font-size: 32px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .form-subtitle {
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .registration-form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .form-select {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #007bff;
+            background: white;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .checkbox-input {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            line-height: 1.4;
+            color: #495057;
+        }
+
+        .checkbox-label a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+
+        .submit-button {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,123,255,0.3);
+        }
+
+        .submit-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 30px;
+            color: #6c757d;
+        }
+
+        .login-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .registration-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+
+            .welcome-section {
+                display: none;
+            }
+
+            .form-section {
+                padding: 40px 30px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="registration-container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <div class="welcome-title">
+                🤝 Word Partner van Marcel's Taxi
+            </div>
+            <div class="welcome-subtitle">
+                Sluit je aan bij ons netwerk en verdien commissie op elke taxi boeking die je doorstuurt.
+            </div>
+            <ul class="benefit-list">
+                <li class="benefit-item">
+                    <div class="benefit-icon">✓</div>
+                    <span>Tot 15% commissie per boeking</span>
+                </li>
+                <li class="benefit-item">
+                    <div class="benefit-icon">✓</div>
+                    <span>Eigen partner dashboard</span>
+                </li>
+                <li class="benefit-item">
+                    <div class="benefit-icon">✓</div>
+                    <span>24/7 booking interface</span>
+                </li>
+                <li class="benefit-item">
+                    <div class="benefit-icon">✓</div>
+                    <span>Maandelijkse uitbetalingen</span>
+                </li>
+                <li class="benefit-item">
+                    <div class="benefit-icon">✓</div>
+                    <span>Premium customer service</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-section">
+            <div class="form-header">
+                <h1 class="form-title">Registreer Nu</h1>
+                <p class="form-subtitle">Vul onderstaande gegevens in om partner te worden</p>
+            </div>
+
+            <div id="error-message" class="error-message"></div>
+            <div id="success-message" class="success-message"></div>
+
+            <form class="registration-form" id="partner-registration-form">
+                <!-- Business Information -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Bedrijfsnaam *</label>
+                        <input type="text" class="form-input" id="company-name" required 
+                               placeholder="Hotel Amsterdam" maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Partner Type *</label>
+                        <select class="form-select" id="partner-type" required>
+                            <option value="">Selecteer type</option>
+                            <option value="hotel">Hotel</option>
+                            <option value="travel">Reisbureau</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="business">Bedrijf</option>
+                            <option value="other">Overig</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">KvK Nummer</label>
+                        <input type="text" class="form-input" id="kvk-number" 
+                               placeholder="12345678" pattern="[0-9]{8}" maxlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">BTW Nummer</label>
+                        <input type="text" class="form-input" id="btw-number" 
+                               placeholder="NL123456789B01" maxlength="20">
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">Bedrijfsadres *</label>
+                    <input type="text" class="form-input" id="company-address" required 
+                           placeholder="Straat 123, 1234 AB Amsterdam" maxlength="200">
+                </div>
+
+                <!-- Contact Information -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Contactpersoon *</label>
+                        <input type="text" class="form-input" id="contact-person" required 
+                               placeholder="Jan de Vries" maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Functie</label>
+                        <input type="text" class="form-input" id="contact-function" 
+                               placeholder="Manager" maxlength="50">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Email Adres *</label>
+                        <input type="email" class="form-input" id="email" required 
+                               placeholder="info@hotel.com" maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telefoonnummer *</label>
+                        <input type="tel" class="form-input" id="phone" required 
+                               placeholder="020-1234567" maxlength="20">
+                    </div>
+                </div>
+
+                <!-- Business Details -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Verwacht aantal ritten/maand</label>
+                        <select class="form-select" id="expected-trips">
+                            <option value="">Selecteer verwachting</option>
+                            <option value="1-10">1-10 ritten</option>
+                            <option value="11-50">11-50 ritten</option>
+                            <option value="51-100">51-100 ritten</option>
+                            <option value="100+">100+ ritten</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Website</label>
+                        <input type="url" class="form-input" id="website" 
+                               placeholder="https://www.hotel.com" maxlength="200">
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="form-group full-width">
+                    <label class="form-label">Aanvullende Informatie</label>
+                    <textarea class="form-input" id="additional-info" rows="3" 
+                              placeholder="Vertel ons meer over uw bedrijf en waarom u partner wilt worden..." 
+                              maxlength="500" style="resize: vertical; min-height: 80px;"></textarea>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="checkbox-group">
+                    <input type="checkbox" class="checkbox-input" id="terms-agreement" required>
+                    <label class="checkbox-label" for="terms-agreement">
+                        Ik ga akkoord met de <a href="#" target="_blank">algemene voorwaarden</a> 
+                        en het <a href="#" target="_blank">privacy beleid</a> van Marcel's Taxi *
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" class="checkbox-input" id="marketing-agreement">
+                    <label class="checkbox-label" for="marketing-agreement">
+                        Ik wil graag nieuws en updates ontvangen over het partner programma
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-button" id="submit-button">
+                    <span class="loading-spinner" id="loading-spinner"></span>
+                    <span id="button-text">Registratie Versturen</span>
+                </button>
+            </form>
+
+            <div class="login-link">
+                Heeft u al een account? <a href="partner-login.html">Log hier in</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form validation and submission
+        document.getElementById('partner-registration-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submit-button');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('loading-spinner');
+            const errorDiv = document.getElementById('error-message');
+            const successDiv = document.getElementById('success-message');
+            
+            // Hide previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // Validate form
+            if (!validateForm()) {
+                return;
+            }
+            
+            // Show loading state
+            submitButton.disabled = true;
+            spinner.style.display = 'inline-block';
+            buttonText.textContent = 'Bezig met registreren...';
+            
+            // Simulate registration process
+            setTimeout(() => {
+                registerPartner();
+            }, 2000);
+        });
+
+        function validateForm() {
+            const requiredFields = [
+                'company-name', 'partner-type', 'company-address', 
+                'contact-person', 'email', 'phone', 'terms-agreement'
+            ];
+            
+            const errorDiv = document.getElementById('error-message');
+            let errors = [];
+            
+            // Check required fields
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim() || (field.type === 'checkbox' && !field.checked)) {
+                    const label = document.querySelector(`label[for="${fieldId}"]`)?.textContent.replace(' *', '') || 
+                                 field.previousElementSibling?.textContent.replace(' *', '') || fieldId;
+                    errors.push(`${label} is verplicht`);
+                }
+            });
+            
+            // Validate email
+            const email = document.getElementById('email').value;
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errors.push('Email adres is niet geldig');
+            }
+            
+            // Validate phone
+            const phone = document.getElementById('phone').value;
+            if (phone && !/^[0-9\-\+\(\)\s]+$/.test(phone)) {
+                errors.push('Telefoonnummer bevat ongeldige karakters');
+            }
+            
+            // Validate KvK number if provided
+            const kvk = document.getElementById('kvk-number').value;
+            if (kvk && !/^[0-9]{8}$/.test(kvk)) {
+                errors.push('KvK nummer moet 8 cijfers bevatten');
+            }
+            
+            if (errors.length > 0) {
+                errorDiv.innerHTML = '<strong>Corrigeer de volgende fouten:</strong><br>' + errors.join('<br>');
+                errorDiv.style.display = 'block';
+                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+            
+            return true;
+        }
+
+        function registerPartner() {
+            const formData = {
+                id: 'PR' + Date.now(),
+                companyName: document.getElementById('company-name').value,
+                partnerType: document.getElementById('partner-type').value,
+                kvkNumber: document.getElementById('kvk-number').value,
+                btwNumber: document.getElementById('btw-number').value,
+                companyAddress: document.getElementById('company-address').value,
+                contactPerson: document.getElementById('contact-person').value,
+                contactFunction: document.getElementById('contact-function').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                expectedTrips: document.getElementById('expected-trips').value,
+                website: document.getElementById('website').value,
+                additionalInfo: document.getElementById('additional-info').value,
+                marketingAgreement: document.getElementById('marketing-agreement').checked,
+                status: 'pending',
+                registrationDate: new Date().toISOString(),
+                approvedDate: null,
+                commissionRate: getDefaultCommissionRate(document.getElementById('partner-type').value),
+                totalBookings: 0,
+                totalCommission: 0
+            };
+            
+            // Save to localStorage for admin review
+            const pendingPartners = JSON.parse(localStorage.getItem('pendingPartnerRegistrations') || '[]');
+            pendingPartners.push(formData);
+            localStorage.setItem('pendingPartnerRegistrations', JSON.stringify(pendingPartners));
+            
+            // Show success message
+            const successDiv = document.getElementById('success-message');
+            successDiv.innerHTML = `
+                <strong>Registratie succesvol verzonden!</strong><br>
+                Uw aanvraag wordt binnen 2 werkdagen beoordeeld. U ontvangt een email zodra uw account is goedgekeurd.
+                <br><br>
+                <strong>Referentie nummer:</strong> ${formData.id}
+            `;
+            successDiv.style.display = 'block';
+            
+            // Reset button
+            const submitButton = document.getElementById('submit-button');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('loading-spinner');
+            
+            submitButton.disabled = false;
+            spinner.style.display = 'none';
+            buttonText.textContent = 'Nieuwe Registratie';
+            
+            // Clear form
+            document.getElementById('partner-registration-form').reset();
+            
+            // Scroll to success message
+            successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            console.log('Partner registration saved:', formData);
+        }
+
+        function getDefaultCommissionRate(partnerType) {
+            const rates = {
+                hotel: 8,
+                travel: 10,
+                restaurant: 6,
+                business: 7,
+                other: 5
+            };
+            return rates[partnerType] || 5;
+        }
+
+        // Auto-format KvK number
+        document.getElementById('kvk-number').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Auto-format phone number
+        document.getElementById('phone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9\-\+\(\)\s]/g, '');
+        });
+
+        // Partner type change - show relevant commission info
+        document.getElementById('partner-type').addEventListener('change', function(e) {
+            const commissionRates = {
+                hotel: '8%',
+                travel: '10%', 
+                restaurant: '6%',
+                business: '7%',
+                other: '5%'
+            };
+            
+            if (this.value && commissionRates[this.value]) {
+                console.log(`Commission rate for ${this.value}: ${commissionRates[this.value]}`);
+            }
+        });
+    </script>
+</body>
+</html>

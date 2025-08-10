@@ -606,8 +606,59 @@
         function checkAuth() {
             const session = localStorage.getItem('customerSession');
             if (!session) {
-                window.location.href = 'customer-login.html';
-                return null;
+                // Create demo session for testing
+                const demoSession = {
+                    customerId: 'DEMO123',
+                    customerName: 'Demo Klant',
+                    email: 'demo@example.com',
+                    phone: '06-12345678',
+                    loginTime: new Date().toISOString()
+                };
+                localStorage.setItem('customerSession', JSON.stringify(demoSession));
+                console.log('Demo session created for testing');
+                
+                // Also create demo bookings
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const nextHour = new Date();
+                nextHour.setHours(nextHour.getHours() + 1);
+                
+                const demoBookings = [
+                    {
+                        id: 'BK001',
+                        from: 'Amsterdam Centrum',
+                        to: 'Schiphol Airport',
+                        date: nextWeek.toLocaleDateString('nl-NL'),
+                        time: '14:30',
+                        price: '45.50',
+                        status: 'active'
+                    },
+                    {
+                        id: 'BK002',
+                        from: 'Hilton Hotel',
+                        to: 'Amsterdam Centraal',
+                        date: nextHour.toLocaleDateString('nl-NL'),
+                        time: nextHour.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+                        price: '32.00',
+                        status: 'active'
+                    },
+                    {
+                        id: 'BK003',
+                        from: 'Restaurant De Kas',
+                        to: 'Hotel V Amsterdam',
+                        date: yesterday.toLocaleDateString('nl-NL'), 
+                        time: '22:15',
+                        price: '28.50',
+                        status: 'completed'
+                    }
+                ];
+                localStorage.setItem('customerBookings_DEMO123', JSON.stringify(demoBookings));
+                
+                return demoSession;
             }
             
             const sessionData = JSON.parse(session);
@@ -695,9 +746,35 @@
             const statusText = booking.status === 'completed' ? 'Voltooid' : 
                               booking.status === 'active' ? 'Actief' : 'Geannuleerd';
             
-            // Add track button for active bookings
-            const trackButton = booking.status === 'active' ? 
-                `<button onclick="window.open('tracking-system.html?id=${booking.id}', '_blank')" style="background: #007bff; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; margin-left: 10px;">📍 Track</button>` : '';
+            // Check if booking can be modified (more than 24 hours before travel)
+            const canModify = canModifyBooking(booking.date, booking.time);
+            const travelDateTime = new Date(`${booking.date.split('-').reverse().join('-')}T${booking.time || '12:00'}`);
+            const now = new Date();
+            const hoursUntil = (travelDateTime - now) / (1000 * 60 * 60);
+            
+            // Build action buttons based on status and time
+            let actionButtons = '';
+            
+            if (booking.status === 'active') {
+                // Track button for active bookings
+                actionButtons += `<button onclick="window.open('tracking-system.html?id=${booking.id}', '_blank')" style="background: #007bff; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; margin-left: 5px; font-size: 12px;">📍 Track</button>`;
+                
+                // Modify button if more than 24h away
+                if (canModify) {
+                    actionButtons += `<button onclick="modifyBooking('${booking.id}')" style="background: #28a745; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; margin-left: 5px; font-size: 12px;">✏️ Wijzig</button>`;
+                } else if (hoursUntil > 0) {
+                    // Less than 24h but not yet today - show locked modify
+                    actionButtons += `<button disabled style="background: #6c757d; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: not-allowed; margin-left: 5px; font-size: 12px;" title="Wijzigingen niet meer mogelijk binnen 24 uur">🔒 Te laat</button>`;
+                }
+                
+                // Chat with driver if within 2 hours of travel time
+                if (hoursUntil <= 2 && hoursUntil > -1) {
+                    actionButtons += `<button onclick="chatWithDriver('${booking.id}')" style="background: #17a2b8; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; margin-left: 5px; font-size: 12px;">💬 Chat</button>`;
+                }
+            } else if (booking.status === 'completed') {
+                // Rate driver button for completed bookings
+                actionButtons += `<button onclick="rateDriver('${booking.id}')" style="background: #ffc107; color: #212529; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; margin-left: 5px; font-size: 12px;">⭐ Beoordeel</button>`;
+            }
             
             return `
                 <div class="booking-item">
@@ -705,16 +782,158 @@
                         <h4>Booking #${booking.id}</h4>
                         <div class="booking-details">
                             <span>📍 ${booking.from} → ${booking.to}</span>
-                            <span>📅 ${booking.date}</span>
+                            <span>📅 ${booking.date} ${booking.time ? booking.time : ''}</span>
                             <span>💰 €${booking.price}</span>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center;">
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
                         <span class="booking-status ${statusClass}">${statusText}</span>
-                        ${trackButton}
+                        ${actionButtons}
                     </div>
                 </div>
             `;
+        }
+
+        // Check if booking can be modified (more than 24 hours before travel)
+        function canModifyBooking(bookingDate, bookingTime = '12:00') {
+            const travelDateTime = new Date(`${bookingDate.split('-').reverse().join('-')}T${bookingTime}`);
+            const now = new Date();
+            const hoursUntilTravel = (travelDateTime - now) / (1000 * 60 * 60);
+            return hoursUntilTravel > 24;
+        }
+
+        // Modify booking function
+        function modifyBooking(bookingId) {
+            const session = JSON.parse(localStorage.getItem('customerSession'));
+            const bookings = JSON.parse(localStorage.getItem('customerBookings_' + session.customerId) || '[]');
+            const booking = bookings.find(b => b.id === bookingId);
+            
+            if (!booking) {
+                alert('Booking niet gevonden');
+                return;
+            }
+
+            if (!canModifyBooking(booking.date, booking.time)) {
+                alert('Deze booking kan niet meer worden gewijzigd (binnen 24 uur van vertrek)');
+                return;
+            }
+
+            // Open modify modal
+            showModifyModal(booking);
+        }
+
+        // Chat with driver function  
+        function chatWithDriver(bookingId) {
+            // Open chat with specific booking context
+            const chatUrl = `chat-system.html?booking=${bookingId}&mode=driver`;
+            window.open(chatUrl, '_blank', 'width=800,height=600');
+        }
+
+        // Rate driver function
+        function rateDriver(bookingId) {
+            const rating = prompt('Beoordeel uw chauffeur (1-5 sterren):', '5');
+            if (rating && rating >= 1 && rating <= 5) {
+                alert(`Bedankt voor uw beoordeling van ${rating} sterren!`);
+                // In real app, save rating to database
+            }
+        }
+
+        // Show modify modal
+        function showModifyModal(booking) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.5); display: flex; align-items: center; 
+                justify-content: center; z-index: 1000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h3 style="color: #2c3e50;">Booking Wijzigen #${booking.id}</h3>
+                        <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer;">&times;</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Van:</label>
+                        <input type="text" id="modify-from" value="${booking.from}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Naar:</label>
+                        <input type="text" id="modify-to" value="${booking.to}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Datum:</label>
+                            <input type="date" id="modify-date" value="${booking.date.split('-').reverse().join('-')}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Tijd:</label>
+                            <input type="time" id="modify-time" value="${booking.time || '12:00'}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px;">
+                        <strong>Let op:</strong> Wijzigingen zijn alleen mogelijk tot 24 uur voor vertrek.
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                        <button onclick="this.closest('.modal-overlay').remove()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">Annuleren</button>
+                        <button onclick="saveBookingChanges('${booking.id}', this.closest('.modal-overlay'))" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">Wijzigingen Opslaan</button>
+                    </div>
+                </div>
+            `;
+            
+            modal.className = 'modal-overlay';
+            document.body.appendChild(modal);
+        }
+
+        // Save booking changes
+        function saveBookingChanges(bookingId, modal) {
+            const session = JSON.parse(localStorage.getItem('customerSession'));
+            const bookings = JSON.parse(localStorage.getItem('customerBookings_' + session.customerId) || '[]');
+            const bookingIndex = bookings.findIndex(b => b.id === bookingId);
+            
+            if (bookingIndex === -1) return;
+            
+            // Get new values
+            const newFrom = document.getElementById('modify-from').value;
+            const newTo = document.getElementById('modify-to').value;
+            const newDate = document.getElementById('modify-date').value;
+            const newTime = document.getElementById('modify-time').value;
+            
+            // Validate date (must be more than 24h from now)
+            const newDateTime = new Date(`${newDate}T${newTime}`);
+            const now = new Date();
+            const hoursUntil = (newDateTime - now) / (1000 * 60 * 60);
+            
+            if (hoursUntil <= 24) {
+                alert('De nieuwe datum/tijd moet meer dan 24 uur in de toekomst zijn!');
+                return;
+            }
+            
+            // Update booking
+            bookings[bookingIndex].from = newFrom;
+            bookings[bookingIndex].to = newTo;
+            bookings[bookingIndex].date = newDate.split('-').reverse().join('-'); // Convert back to DD-MM-YYYY
+            bookings[bookingIndex].time = newTime;
+            bookings[bookingIndex].lastModified = new Date().toISOString();
+            
+            // Save to localStorage
+            localStorage.setItem('customerBookings_' + session.customerId, JSON.stringify(bookings));
+            
+            // Close modal and refresh
+            modal.remove();
+            alert('Booking succesvol gewijzigd!');
+            
+            // Refresh the bookings display
+            if (document.getElementById('overview-section').classList.contains('active')) {
+                loadOverview();
+            } else if (document.getElementById('bookings-section').classList.contains('active')) {
+                loadAllBookings();
+            }
         }
 
         // Load profile

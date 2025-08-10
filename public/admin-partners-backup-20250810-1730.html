@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcel's Taxi - Partner Management</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .admin-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: auto 1fr;
+            min-height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 50px rgba(0,0,0,0.1);
+        }
+
+        .admin-header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .admin-nav {
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 12px 25px;
+            color: #495057;
+            text-decoration: none;
+            border-radius: 0 25px 25px 0;
+            margin: 2px 20px 2px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: #e9ecef;
+            color: #007bff;
+        }
+
+        .nav-item.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .admin-main {
+            padding: 30px;
+            background: #f8f9fa;
+            overflow-y: auto;
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .section-title {
+            font-size: 28px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .section-subtitle {
+            color: #6c757d;
+            margin-top: 5px;
+            font-size: 16px;
+        }
+
+        .add-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .add-button:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        /* Partner Statistics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Partner Table */
+        .partners-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .partners-table th,
+        .partners-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .partners-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .partners-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .partner-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .partner-type {
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .partner-status {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #0056b3;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        /* Commission Settings */
+        .commission-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .commission-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .commission-card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-addon {
+            background: #e9ecef;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .range-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .save-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .save-button:hover {
+            background: #218838;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .cancel-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .cancel-button:hover {
+            background: #5a6268;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 24px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .empty-text {
+            color: #adb5bd;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .admin-container {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-nav {
+                display: none;
+            }
+
+            .commission-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <div>
+                <h1 class="header-title">🤝 Partner Management</h1>
+                <p style="opacity: 0.9; margin-top: 5px;">Beheer uw partners en commissie instellingen</p>
+            </div>
+            <div class="header-actions">
+                <a href="admin-drivers.html" class="back-button">← Terug naar Admin</a>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <aside class="admin-nav">
+            <a href="#" class="nav-item active" onclick="showSection('overview')">📊 Overzicht</a>
+            <a href="#" class="nav-item" onclick="showSection('partners')">🏢 Partners</a>
+            <a href="#" class="nav-item" onclick="showSection('settings')">⚙️ Commissie Settings</a>
+            <a href="#" class="nav-item" onclick="showSection('profit-split')">💰 Winst Verdeling</a>
+            <a href="#" class="nav-item" onclick="showSection('reports')">📈 Rapporten</a>
+            <a href="#" class="nav-item" onclick="showSection('payouts')">💸 Uitbetalingen</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Overview Section -->
+            <section id="overview-section" class="content-section active">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Partner Overzicht</h2>
+                        <p class="section-subtitle">Statistieken van uw partner netwerk</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-partners">12</div>
+                        <div class="stat-label">Actieve Partners</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                        <div class="stat-number" id="monthly-bookings">247</div>
+                        <div class="stat-label">Ritten Deze Maand</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);">
+                        <div class="stat-number" id="monthly-commission">€1,247</div>
+                        <div class="stat-label">Commissie Deze Maand</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50;">
+                        <div class="stat-number" id="total-commission">€8,542</div>
+                        <div class="stat-label">Totaal Commissie</div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div style="background: white; border-radius: 12px; padding: 25px; margin-top: 20px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 20px;">Recente Partner Activiteit</h3>
+                    <div id="recent-activity">
+                        <div style="padding: 15px; border-left: 4px solid #007bff; margin-bottom: 15px; background: #f8f9fa;">
+                            <strong>Hilton Amsterdam</strong> - 3 nieuwe boekingen (€127 commissie)
+                            <div style="color: #6c757d; font-size: 14px; margin-top: 5px;">2 uur geleden</div>
+                        </div>
+                        <div style="padding: 15px; border-left: 4px solid #28a745; margin-bottom: 15px; background: #f8f9fa;">
+                            <strong>TravelXpert</strong> - Nieuwe partner geregistreerd
+                            <div style="color: #6c757d; font-size: 14px; margin-top: 5px;">5 uur geleden</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Partners Section -->
+            <section id="partners-section" class="content-section">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Partner Beheer</h2>
+                        <p class="section-subtitle">Beheer al uw partners en hun settings</p>
+                    </div>
+                    <button class="add-button" onclick="showAddPartnerModal()">
+                        <span>+</span>
+                        <span>Nieuwe Partner</span>
+                    </button>
+                </div>
+
+                <table class="partners-table" id="partners-table">
+                    <thead>
+                        <tr>
+                            <th>Partner</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Ritten</th>
+                            <th>Commissie</th>
+                            <th>Laatste Activiteit</th>
+                            <th>Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partners-tbody">
+                        <!-- Partners will be loaded here -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="content-section">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Commissie Instellingen</h2>
+                        <p class="section-subtitle">Configureer commissie percentages per partner type</p>
+                    </div>
+                    <button class="save-button" onclick="saveCommissionSettings()">Instellingen Opslaan</button>
+                </div>
+
+                <div class="commission-grid">
+                    <!-- Volume Based Commission -->
+                    <div class="commission-card">
+                        <h3>📈 Volume Gebaseerde Commissie</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tier 1 (1-10 ritten/maand)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="tier1-commission" value="5" min="0" max="20" step="0.5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tier 2 (11-50 ritten/maand)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="tier2-commission" value="7" min="0" max="20" step="0.5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tier 3 (50+ ritten/maand)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="tier3-commission" value="10" min="0" max="20" step="0.5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Partner Type Commission -->
+                    <div class="commission-card">
+                        <h3>🏢 Partner Type Commissie</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Hotels</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="hotel-commission" value="8" min="0" max="20" step="0.5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Reisbureaus</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="travel-commission" value="10" min="0" max="20" step="0.5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Restaurants</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="restaurant-commission" value="6" min="0" max="20" step="0.5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bedrijven</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="business-commission" value="7" min="0" max="20" step="0.5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trip Type Commission -->
+                <div style="margin-top: 30px;">
+                    <div class="commission-card">
+                        <h3>🚖 Rit Type Commissie</h3>
+                        <div class="commission-grid">
+                            <div class="form-group">
+                                <label class="form-label">Normale Ritten</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-input" id="normal-trip-commission" value="8" min="0" max="20" step="0.5">
+                                    <span class="input-addon">%</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Airport Transfers</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-input" id="airport-commission" value="10" min="0" max="20" step="0.5">
+                                    <span class="input-addon">%</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Groepsritten (5+ personen)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-input" id="group-commission" value="12" min="0" max="20" step="0.5">
+                                    <span class="input-addon">%</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Premium Service</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-input" id="premium-commission" value="15" min="0" max="25" step="0.5">
+                                    <span class="input-addon">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports-section" class="content-section">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Partner Rapporten</h2>
+                        <p class="section-subtitle">Detailleerde analyse van partner prestaties</p>
+                    </div>
+                </div>
+
+                <div class="empty-state">
+                    <div class="empty-icon">📈</div>
+                    <div class="empty-title">Rapporten komen binnenkort</div>
+                    <div class="empty-text">Uitgebreide analytics en rapportage voor partners worden toegevoegd</div>
+                </div>
+            </section>
+
+            <!-- Profit Split Section -->
+            <section id="profit-split-section" class="content-section">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Winst Verdeling</h2>
+                        <p class="section-subtitle">Stel in hoeveel procent naar chauffeur en admin gaat</p>
+                    </div>
+                    <button class="save-button" onclick="saveProfitSplit()">Verdeling Opslaan</button>
+                </div>
+
+                <!-- Current Settings Display -->
+                <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+                    <h3 style="color: #1976d2; margin-bottom: 15px;">💰 Huidige Verdeling</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div>
+                            <div style="font-size: 36px; font-weight: bold; color: #2c3e50;" id="current-driver-percentage">80%</div>
+                            <div style="color: #6c757d; font-size: 16px;">Naar Chauffeur</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 36px; font-weight: bold; color: #007bff;" id="current-admin-percentage">20%</div>
+                            <div style="color: #6c757d; font-size: 16px;">Naar Admin (Jij)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Calculation -->
+                <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+                    <h3 style="color: #2c3e50; margin-bottom: 20px;">📊 Voorbeeld Berekening</h3>
+                    <div style="font-size: 18px; margin-bottom: 15px;">
+                        <strong>Rit prijs: €50.00</strong>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center;">
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #28a745;">
+                            <div style="font-size: 24px; font-weight: bold; color: #28a745;" id="example-driver-amount">€40.00</div>
+                            <div style="color: #6c757d;">Chauffeur krijgt</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #007bff;">
+                            <div style="font-size: 24px; font-weight: bold; color: #007bff;" id="example-admin-amount">€10.00</div>
+                            <div style="color: #6c757d;">Admin krijgt</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #dc3545;">
+                            <div style="font-size: 24px; font-weight: bold; color: #dc3545;" id="example-partner-amount">€4.00</div>
+                            <div style="color: #6c757d;">Partner commissie (8%)</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center; color: #6c757d; font-size: 14px;">
+                        * Partner commissie wordt afgetrokken van admin winst
+                    </div>
+                </div>
+
+                <!-- Profit Split Settings -->
+                <div class="commission-grid">
+                    <!-- Driver Percentage -->
+                    <div class="commission-card">
+                        <h3>🚖 Chauffeur Percentage</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Percentage naar chauffeur</label>
+                            <div class="input-group">
+                                <input type="range" id="driver-percentage-slider" min="60" max="90" value="80" 
+                                       style="width: 100%; margin-bottom: 15px;" oninput="updateProfitSplit()">
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #6c757d;">
+                                    <span>60%</span>
+                                    <span>90%</span>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px;">
+                                <span style="font-size: 24px; font-weight: bold; color: #28a745;" id="driver-percentage-display">80%</span>
+                            </div>
+                        </div>
+
+                        <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                            <div style="color: #155724; font-size: 14px;">
+                                <strong>Tip:</strong> Standaard is 80% naar chauffeur gebruikelijk in de taxi industrie.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Percentage (Auto calculated) -->
+                    <div class="commission-card">
+                        <h3>👤 Admin Percentage (Jouw Winst)</h3>
+                        
+                        <div style="text-align: center; margin: 20px 0;">
+                            <div style="font-size: 48px; font-weight: bold; color: #007bff;" id="admin-percentage-display">20%</div>
+                            <div style="color: #6c757d; margin-top: 10px;">Automatisch berekend</div>
+                        </div>
+
+                        <div style="background: #cce5ff; padding: 15px; border-radius: 8px;">
+                            <div style="color: #004085; font-size: 14px;">
+                                <strong>Let op:</strong> Dit percentage gaat naar jou, minus eventuele partner commissies.
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 10px;">Maandelijkse Winst Prognose:</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                                <div>
+                                    <strong>100 ritten/maand:</strong><br>
+                                    <span style="color: #007bff;" id="monthly-100">€1,000</span>
+                                </div>
+                                <div>
+                                    <strong>500 ritten/maand:</strong><br>
+                                    <span style="color: #007bff;" id="monthly-500">€5,000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Settings -->
+                <div style="margin-top: 30px;">
+                    <div class="commission-card">
+                        <h3>⚙️ Geavanceerde Instellingen</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="different-rates-weekend" style="margin-right: 10px;">
+                                Andere verdeling in weekenden
+                            </label>
+                        </div>
+                        
+                        <div class="form-group" id="weekend-settings" style="display: none;">
+                            <label class="form-label">Weekend chauffeur percentage</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="weekend-driver-percentage" value="75" min="60" max="90" step="5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="bonus-high-volume" style="margin-right: 10px;">
+                                Bonus voor chauffeurs bij hoog volume (50+ ritten/maand)
+                            </label>
+                        </div>
+                        
+                        <div class="form-group" id="bonus-settings" style="display: none;">
+                            <label class="form-label">Bonus percentage (bovenop normaal percentage)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-input" id="volume-bonus-percentage" value="2" min="1" max="10" step="0.5">
+                                <span class="input-addon">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payouts Section -->
+            <section id="payouts-section" class="content-section">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Uitbetalingen</h2>
+                        <p class="section-subtitle">Beheer partner commissie uitbetalingen</p>
+                    </div>
+                </div>
+
+                <div class="empty-state">
+                    <div class="empty-icon">💸</div>
+                    <div class="empty-title">Uitbetalingen Module</div>
+                    <div class="empty-text">Automatische uitbetalingen en geschiedenis worden binnenkort toegevoegd</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Partner Modal -->
+    <div id="add-partner-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Nieuwe Partner Toevoegen</h3>
+                <button class="modal-close" onclick="hideAddPartnerModal()">&times;</button>
+            </div>
+
+            <form onsubmit="addNewPartner(event)">
+                <div class="form-group">
+                    <label class="form-label">Partner Naam</label>
+                    <input type="text" class="form-input" id="new-partner-name" required placeholder="Bijv. Hilton Amsterdam">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Partner Type</label>
+                    <select class="form-input" id="new-partner-type" required>
+                        <option value="">Selecteer type</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="travel">Reisbureau</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="business">Bedrijf</option>
+                        <option value="other">Overig</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Contact Persoon</label>
+                    <input type="text" class="form-input" id="new-partner-contact" required placeholder="Naam contactpersoon">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="new-partner-email" required placeholder="partner@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Telefoon</label>
+                    <input type="tel" class="form-input" id="new-partner-phone" required placeholder="06-12345678">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="cancel-button" onclick="hideAddPartnerModal()">Annuleren</button>
+                    <button type="submit" class="add-button">Partner Toevoegen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let partners = [];
+
+        // Initialize
+        window.onload = function() {
+            loadPartners();
+            loadCommissionSettings();
+            loadProfitSplitSettings();
+            updateStats();
+            toggleAdvancedSettings();
+        };
+
+        // Show section
+        function showSection(section) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(section + '-section').classList.add('active');
+            event.target.classList.add('active');
+
+            if (section === 'partners') loadPartners();
+            if (section === 'profit-split') loadProfitSplitSettings();
+        }
+
+        // Load partners
+        function loadPartners() {
+            partners = JSON.parse(localStorage.getItem('taxiPartners') || '[]');
+            
+            // Add demo partners if none exist
+            if (partners.length === 0) {
+                partners = [
+                    {
+                        id: 'P001',
+                        name: 'Hilton Amsterdam',
+                        type: 'hotel',
+                        status: 'active',
+                        contact: 'Jan de Vries',
+                        email: 'jan@hiltonamsterdam.com',
+                        phone: '020-1234567',
+                        trips: 47,
+                        commission: 376,
+                        lastActivity: '2 uur geleden',
+                        registeredDate: '2024-01-15'
+                    },
+                    {
+                        id: 'P002', 
+                        name: 'TravelXpert BV',
+                        type: 'travel',
+                        status: 'active',
+                        contact: 'Marie Jansen',
+                        email: 'marie@travelxpert.nl',
+                        phone: '020-7654321',
+                        trips: 89,
+                        commission: 712,
+                        lastActivity: '1 dag geleden',
+                        registeredDate: '2024-01-20'
+                    },
+                    {
+                        id: 'P003',
+                        name: 'Restaurant De Kas',
+                        type: 'restaurant',
+                        status: 'pending',
+                        contact: 'Tom Bakker',
+                        email: 'tom@dekas.nl',
+                        phone: '020-9876543',
+                        trips: 3,
+                        commission: 18,
+                        lastActivity: '3 dagen geleden',
+                        registeredDate: '2024-02-01'
+                    }
+                ];
+                localStorage.setItem('taxiPartners', JSON.stringify(partners));
+            }
+
+            renderPartners();
+        }
+
+        // Render partners table
+        function renderPartners() {
+            const tbody = document.getElementById('partners-tbody');
+            tbody.innerHTML = '';
+
+            partners.forEach(partner => {
+                const row = document.createElement('tr');
+                
+                const typeLabels = {
+                    hotel: 'Hotel',
+                    travel: 'Reisbureau',
+                    restaurant: 'Restaurant',
+                    business: 'Bedrijf',
+                    other: 'Overig'
+                };
+
+                row.innerHTML = `
+                    <td>
+                        <div class="partner-name">${partner.name}</div>
+                        <div style="font-size: 12px; color: #6c757d;">${partner.contact}</div>
+                    </td>
+                    <td><span class="partner-type">${typeLabels[partner.type] || partner.type}</span></td>
+                    <td><span class="partner-status status-${partner.status}">${partner.status === 'active' ? 'Actief' : partner.status === 'pending' ? 'Wachtend' : 'Inactief'}</span></td>
+                    <td><strong>${partner.trips}</strong></td>
+                    <td><strong>€${partner.commission}</strong></td>
+                    <td>${partner.lastActivity}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn btn-edit" onclick="editPartner('${partner.id}')">✏️</button>
+                            <button class="action-btn btn-delete" onclick="deletePartner('${partner.id}')">🗑️</button>
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Show add partner modal
+        function showAddPartnerModal() {
+            document.getElementById('add-partner-modal').classList.add('show');
+        }
+
+        // Hide add partner modal
+        function hideAddPartnerModal() {
+            document.getElementById('add-partner-modal').classList.remove('show');
+            document.querySelector('#add-partner-modal form').reset();
+        }
+
+        // Add new partner
+        function addNewPartner(event) {
+            event.preventDefault();
+            
+            const newPartner = {
+                id: 'P' + String(Date.now()).slice(-6),
+                name: document.getElementById('new-partner-name').value,
+                type: document.getElementById('new-partner-type').value,
+                status: 'pending',
+                contact: document.getElementById('new-partner-contact').value,
+                email: document.getElementById('new-partner-email').value,
+                phone: document.getElementById('new-partner-phone').value,
+                trips: 0,
+                commission: 0,
+                lastActivity: 'Zojuist geregistreerd',
+                registeredDate: new Date().toISOString().split('T')[0]
+            };
+
+            partners.push(newPartner);
+            localStorage.setItem('taxiPartners', JSON.stringify(partners));
+            
+            renderPartners();
+            updateStats();
+            hideAddPartnerModal();
+            
+            alert('Partner succesvol toegevoegd!');
+        }
+
+        // Edit partner
+        function editPartner(id) {
+            const partner = partners.find(p => p.id === id);
+            if (partner) {
+                alert(`Bewerken van ${partner.name}\n\nDeze functie wordt binnenkort uitgebreid!`);
+            }
+        }
+
+        // Delete partner
+        function deletePartner(id) {
+            const partner = partners.find(p => p.id === id);
+            if (partner && confirm(`Weet u zeker dat u ${partner.name} wilt verwijderen?`)) {
+                partners = partners.filter(p => p.id !== id);
+                localStorage.setItem('taxiPartners', JSON.stringify(partners));
+                renderPartners();
+                updateStats();
+                alert('Partner verwijderd!');
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const activePartners = partners.filter(p => p.status === 'active').length;
+            const monthlyBookings = partners.reduce((sum, p) => sum + p.trips, 0);
+            const monthlyCommission = partners.reduce((sum, p) => sum + p.commission, 0);
+            const totalCommission = monthlyCommission * 6; // Simulate 6 months
+
+            document.getElementById('total-partners').textContent = activePartners;
+            document.getElementById('monthly-bookings').textContent = monthlyBookings;
+            document.getElementById('monthly-commission').textContent = `€${monthlyCommission.toLocaleString()}`;
+            document.getElementById('total-commission').textContent = `€${totalCommission.toLocaleString()}`;
+        }
+
+        // Load commission settings
+        function loadCommissionSettings() {
+            const settings = JSON.parse(localStorage.getItem('partnerCommissionSettings') || '{}');
+            
+            // Set default values if not exist
+            const defaults = {
+                tier1: 5,
+                tier2: 7,
+                tier3: 10,
+                hotel: 8,
+                travel: 10,
+                restaurant: 6,
+                business: 7,
+                normal: 8,
+                airport: 10,
+                group: 12,
+                premium: 15
+            };
+
+            // Update inputs
+            Object.keys(defaults).forEach(key => {
+                const input = document.getElementById(key === 'tier1' ? 'tier1-commission' :
+                                                  key === 'tier2' ? 'tier2-commission' :
+                                                  key === 'tier3' ? 'tier3-commission' :
+                                                  key === 'hotel' ? 'hotel-commission' :
+                                                  key === 'travel' ? 'travel-commission' :
+                                                  key === 'restaurant' ? 'restaurant-commission' :
+                                                  key === 'business' ? 'business-commission' :
+                                                  key === 'normal' ? 'normal-trip-commission' :
+                                                  key === 'airport' ? 'airport-commission' :
+                                                  key === 'group' ? 'group-commission' :
+                                                  key === 'premium' ? 'premium-commission' : '');
+                if (input) {
+                    input.value = settings[key] || defaults[key];
+                }
+            });
+        }
+
+        // Save commission settings
+        function saveCommissionSettings() {
+            const settings = {
+                tier1: parseFloat(document.getElementById('tier1-commission').value),
+                tier2: parseFloat(document.getElementById('tier2-commission').value),
+                tier3: parseFloat(document.getElementById('tier3-commission').value),
+                hotel: parseFloat(document.getElementById('hotel-commission').value),
+                travel: parseFloat(document.getElementById('travel-commission').value),
+                restaurant: parseFloat(document.getElementById('restaurant-commission').value),
+                business: parseFloat(document.getElementById('business-commission').value),
+                normal: parseFloat(document.getElementById('normal-trip-commission').value),
+                airport: parseFloat(document.getElementById('airport-commission').value),
+                group: parseFloat(document.getElementById('group-commission').value),
+                premium: parseFloat(document.getElementById('premium-commission').value)
+            };
+
+            localStorage.setItem('partnerCommissionSettings', JSON.stringify(settings));
+            alert('Commissie instellingen opgeslagen!');
+        }
+
+        // Load profit split settings
+        function loadProfitSplitSettings() {
+            const settings = JSON.parse(localStorage.getItem('profitSplitSettings') || '{"driverPercentage": 80}');
+            
+            // Update slider and displays
+            const slider = document.getElementById('driver-percentage-slider');
+            if (slider) {
+                slider.value = settings.driverPercentage;
+                updateProfitSplit();
+            }
+
+            // Update advanced settings
+            const weekendCheckbox = document.getElementById('different-rates-weekend');
+            const bonusCheckbox = document.getElementById('bonus-high-volume');
+            
+            if (weekendCheckbox) weekendCheckbox.checked = settings.weekendRates || false;
+            if (bonusCheckbox) bonusCheckbox.checked = settings.volumeBonus || false;
+            
+            if (settings.weekendDriverPercentage) {
+                document.getElementById('weekend-driver-percentage').value = settings.weekendDriverPercentage;
+            }
+            if (settings.volumeBonusPercentage) {
+                document.getElementById('volume-bonus-percentage').value = settings.volumeBonusPercentage;
+            }
+        }
+
+        // Update profit split display
+        function updateProfitSplit() {
+            const driverPercentage = document.getElementById('driver-percentage-slider').value;
+            const adminPercentage = 100 - driverPercentage;
+            
+            // Update percentage displays
+            document.getElementById('driver-percentage-display').textContent = driverPercentage + '%';
+            document.getElementById('admin-percentage-display').textContent = adminPercentage + '%';
+            document.getElementById('current-driver-percentage').textContent = driverPercentage + '%';
+            document.getElementById('current-admin-percentage').textContent = adminPercentage + '%';
+            
+            // Update example calculation (€50 trip)
+            const tripPrice = 50;
+            const driverAmount = (tripPrice * driverPercentage / 100).toFixed(2);
+            const adminAmount = (tripPrice * adminPercentage / 100).toFixed(2);
+            const partnerCommission = (tripPrice * 0.08).toFixed(2); // 8% partner commission example
+            
+            document.getElementById('example-driver-amount').textContent = '€' + driverAmount;
+            document.getElementById('example-admin-amount').textContent = '€' + adminAmount;
+            document.getElementById('example-partner-amount').textContent = '€' + partnerCommission;
+            
+            // Update monthly profit projections (assuming average €50 per trip)
+            const avgTripProfit = tripPrice * adminPercentage / 100;
+            const monthly100 = (100 * avgTripProfit).toLocaleString('nl-NL', { style: 'currency', currency: 'EUR' });
+            const monthly500 = (500 * avgTripProfit).toLocaleString('nl-NL', { style: 'currency', currency: 'EUR' });
+            
+            document.getElementById('monthly-100').textContent = monthly100;
+            document.getElementById('monthly-500').textContent = monthly500;
+        }
+
+        // Save profit split settings
+        function saveProfitSplit() {
+            const settings = {
+                driverPercentage: parseInt(document.getElementById('driver-percentage-slider').value),
+                weekendRates: document.getElementById('different-rates-weekend').checked,
+                volumeBonus: document.getElementById('bonus-high-volume').checked,
+                weekendDriverPercentage: document.getElementById('weekend-driver-percentage').value,
+                volumeBonusPercentage: document.getElementById('volume-bonus-percentage').value,
+                lastUpdated: new Date().toISOString()
+            };
+
+            localStorage.setItem('profitSplitSettings', JSON.stringify(settings));
+            alert('Winst verdeling opgeslagen!');
+            console.log('Profit split settings saved:', settings);
+        }
+
+        // Toggle advanced settings
+        function toggleAdvancedSettings() {
+            const weekendCheckbox = document.getElementById('different-rates-weekend');
+            const bonusCheckbox = document.getElementById('bonus-high-volume');
+            
+            weekendCheckbox.addEventListener('change', function() {
+                document.getElementById('weekend-settings').style.display = this.checked ? 'block' : 'none';
+            });
+            
+            bonusCheckbox.addEventListener('change', function() {
+                document.getElementById('bonus-settings').style.display = this.checked ? 'block' : 'none';
+            });
+        }
+
+        // Close modal on outside click
+        document.getElementById('add-partner-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideAddPartnerModal();
+            }
+        });
+    </script>
+</body>
+</html>
