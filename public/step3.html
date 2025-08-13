@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marcel's Taxi - STAP 3: Klantgegevens v3.0 CACHE BUSTER</title>
-    <meta name="version" content="3.0-cache-buster-meet-greet">
-    <meta name="timestamp" content="2025-08-01-09:20">
-    <script>console.log('🔥 STEP3 v3.0 LOADED - CACHE BUSTED');</script>
+    <title>Marcel's Taxi - STAP 3: Klantgegevens</title>
+    <meta name="version" content="simplified">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <!-- FORCE REFRESH 18:06 - ONLY TOTAL PRICE -->
     <style>
         * {
             margin: 0;
@@ -919,22 +916,7 @@
         }
 
         async function showBookingOverview() {
-            // Debug localStorage first
-            console.log('🔍 DEBUG ALL LOCALSTORAGE DATA:');
-            console.log('selectedVehicleStep2 RAW:', localStorage.getItem('selectedVehicleStep2'));
-            console.log('selectedSurcharges RAW:', localStorage.getItem('selectedSurcharges'));
-            
-            // Parse and debug
-            try {
-                const step2DataRaw = JSON.parse(localStorage.getItem('selectedVehicleStep2') || '{}');
-                const surchargeDataRaw = JSON.parse(localStorage.getItem('selectedSurcharges') || '{}');
-                console.log('🔍 PARSED step2Data:', step2DataRaw);
-                console.log('🔍 PARSED surchargeData:', surchargeDataRaw);
-                console.log('🔍 surchargeData KEYS:', Object.keys(surchargeDataRaw));
-                console.log('🔍 surchargeData VALUES:', Object.values(surchargeDataRaw));
-            } catch (e) {
-                console.error('❌ Failed to parse localStorage data:', e);
-            }
+            // Get localStorage data
             
             // Validate form first
             const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
@@ -1005,16 +987,7 @@
             const surchargeData = JSON.parse(localStorage.getItem('selectedSurcharges') || '{}');
             const passengerDetails = JSON.parse(localStorage.getItem('passengerDetails') || '{}');
             
-            // 🔍 DEBUG: Log all data to console
-            console.log('🔍 OVERVIEW DEBUG - Step1 Data:', step1Data);
-            console.log('🔍 OVERVIEW DEBUG - Step2 Data:', step2Data);
-            console.log('🔍 OVERVIEW DEBUG - Surcharge Data:', surchargeData);
-            console.log('🔍 OVERVIEW DEBUG - Passenger Details:', passengerDetails);
-            console.log('🔍 EXTRA STOPS DEBUG:', step1Data.extraStops);
-            console.log('🔍 EXTRA STOPS LENGTH:', step1Data.extraStops ? step1Data.extraStops.length : 'NO ARRAY');
-            console.log('🔍 EXTRA STOP COUNT:', step1Data.extraStopCount);
-            console.log('🔍 RAW EXTRA STOPS FROM LOCALSTORAGE:', localStorage.getItem('extraStops'));
-            console.log('🔍 RAW EXTRA STOP COUNT FROM LOCALSTORAGE:', localStorage.getItem('extraStopCount'));
+            // Get all booking data
             
             const customerData = {
                 firstName: document.getElementById('firstName').value,
@@ -1218,7 +1191,6 @@
             const basePrice = vehiclePricing?.minimumPrice || vehiclePricing?.basePrice || 50.00;
             const isReturnTrip = step1Data.returnActive === 'true';
             
-            console.log('🚗 VEHICLE INFO:', { vehicleName, basePrice, isReturnTrip });
             
             html += `
                 <div class="overview-section">
@@ -1230,11 +1202,22 @@
                 </div>
             `;
             
-            // Extra Opties Section - Simple display of selected surcharges
-            const actualSurcharges = surchargeData?.selectedSurcharges || surchargeData;
+            // Extra Opties Section - Display ALL surcharges (selected + automatic)
+            // Fix nested selectedSurcharges structure from step2
+            let selectedSurcharges = surchargeData?.selectedSurcharges || {};
+            
+            // Handle nested selectedSurcharges structure
+            while (selectedSurcharges.selectedSurcharges && typeof selectedSurcharges.selectedSurcharges === 'object') {
+                selectedSurcharges = selectedSurcharges.selectedSurcharges;
+            }
+            
+            const automaticCharges = surchargeData?.automaticCharges || {};
             const surchargeTotal = surchargeData?.surchargeTotal || surchargeData?.totalSurcharge || 0;
             
-            if (actualSurcharges && Object.keys(actualSurcharges).length > 0) {
+            const hasSelectedSurcharges = selectedSurcharges && Object.keys(selectedSurcharges).length > 0;
+            const hasAutomaticCharges = automaticCharges && Object.keys(automaticCharges).length > 0;
+            
+            if (hasSelectedSurcharges || hasAutomaticCharges || surchargeTotal > 0) {
                 html += `
                     <div class="overview-section">
                         <div class="overview-section-title">Extra Opties</div>
@@ -1242,27 +1225,50 @@
                 
                 let hasShownAnyItems = false;
                 
-                // Simply display surcharge items as they were selected in step2
-                Object.entries(actualSurcharges).forEach(([key, value]) => {
-                    // Skip technical fields
-                    if (key === 'totalSurcharge' || key === 'surchargeTotal') return;
-                    
-                    if (typeof value === 'object' && value !== null && value.name) {
-                        const itemPrice = parseFloat(value.price) || 0;
-                        const itemQuantity = parseInt(value.quantity) || 1;
-                        const totalItemPrice = itemPrice * itemQuantity;
+                // Display manually selected surcharges
+                if (hasSelectedSurcharges) {
+                    Object.entries(selectedSurcharges).forEach(([key, value]) => {
+                        // Skip technical fields
+                        if (key === 'totalSurcharge' || key === 'surchargeTotal') return;
                         
-                        if (itemPrice > 0) {
-                            html += `
-                                <div class="overview-row">
-                                    <span class="overview-label">${value.name}</span>
-                                    <span class="overview-value">€${totalItemPrice.toFixed(2)}</span>
-                                </div>
-                            `;
-                            hasShownAnyItems = true;
+                        if (typeof value === 'object' && value !== null && value.name) {
+                            const itemPrice = parseFloat(value.price) || 0;
+                            const itemQuantity = parseInt(value.quantity) || 1;
+                            const totalItemPrice = itemPrice * itemQuantity;
+                            
+                            if (itemPrice > 0) {
+                                html += `
+                                    <div class="overview-row">
+                                        <span class="overview-label">${value.name}</span>
+                                        <span class="overview-value">€${totalItemPrice.toFixed(2)}</span>
+                                    </div>
+                                `;
+                                hasShownAnyItems = true;
+                            }
                         }
-                    }
-                });
+                    });
+                }
+                
+                // Display automatic charges (like stopover)
+                if (hasAutomaticCharges) {
+                    Object.entries(automaticCharges).forEach(([key, value]) => {
+                        if (typeof value === 'object' && value !== null && value.name) {
+                            const itemPrice = parseFloat(value.price) || 0;
+                            const itemQuantity = parseInt(value.quantity) || 1;
+                            const totalItemPrice = itemPrice * itemQuantity;
+                            
+                            if (itemPrice > 0) {
+                                html += `
+                                    <div class="overview-row">
+                                        <span class="overview-label">${value.name}</span>
+                                        <span class="overview-value">€${totalItemPrice.toFixed(2)}</span>
+                                    </div>
+                                `;
+                                hasShownAnyItems = true;
+                            }
+                        }
+                    });
+                }
                 
                 // If no individual items shown but there's a total, show it
                 if (!hasShownAnyItems && surchargeTotal > 0) {
@@ -1277,168 +1283,29 @@
                 html += `</div>`;
             }
             
-            // NIEUWE PRIJS BEREKENING: GESPLITSTE HEEN/TERUG LOGICA
-            let finalTotalPrice = 0;
-            let priceBreakdownHTML = '';
+            // SIMPLIFIED PRICING - Just use step2FinalTotalPrice directly
+            const step2FinalPrice = parseFloat(localStorage.getItem('step2FinalTotalPrice') || '0');
+            let finalTotalPrice = step2FinalPrice;
             
-            console.log('💰 NIEUWE SPLIT PRICING BEREKENING');
-            console.log('💰 Step2 Data:', step2Data);
-            console.log('💰 Surcharge Data:', surchargeData);
-            
-            // Get base price from outbound vehicle 
-            let originalBasePrice = 0;
-            if (step2Data.outbound && step2Data.outbound.pricing) {
-                originalBasePrice = parseFloat(step2Data.outbound.pricing.minimumPrice) || 0;
-            } else if (step2Data.vehicle && step2Data.vehicle.pricing) {
-                originalBasePrice = parseFloat(step2Data.vehicle.pricing.minimumPrice) || 0;
-            } else if (step2Data.pricing) {
-                originalBasePrice = parseFloat(step2Data.pricing.minimumPrice) || 0;
+            // Fallback if no step2 price available
+            if (finalTotalPrice <= 0) {
+                // Get base price from vehicle data
+                let basePrice = 0;
+                if (step2Data.outbound && step2Data.outbound.pricing) {
+                    basePrice = parseFloat(step2Data.outbound.pricing.minimumPrice) || 0;
+                } else if (step2Data.vehicle && step2Data.vehicle.pricing) {
+                    basePrice = parseFloat(step2Data.vehicle.pricing.minimumPrice) || 0;
+                } else if (step2Data.pricing) {
+                    basePrice = parseFloat(step2Data.pricing.minimumPrice) || 0;
+                }
+                
+                const surchargeTotal = parseFloat(surchargeData?.surchargeTotal || surchargeData?.totalSurcharge || 0);
+                finalTotalPrice = basePrice + surchargeTotal;
             }
             
+            // Simple price display for both single and return trips
+            let priceBreakdownHTML;
             if (step1Data.returnActive === 'true') {
-                // HEEN EN TERUG: Gebruik EXACTE STAP 2 logica
-                // originalBasePrice is AL verdubbeld in STAP 2 (€51.50 * 2 = €103)
-                const totalBasePrice = originalBasePrice;  // €103 totaal
-                const perRitBasisPrijs = totalBasePrice / 2; // €51.50 per rit
-                
-                console.log('💰 RETURN TRIP - Using STEP 2 doubled base price:', totalBasePrice);
-                
-                // 🎯 MARCEL NEW: Check for Meet & Greet to avoid splitting it
-                let meetGreetPriceInOldSection = 0;
-                if (surchargeData && surchargeData.selectedSurcharges) {
-                    for (const [key, value] of Object.entries(surchargeData.selectedSurcharges)) {
-                        if (key.toLowerCase().includes('meet') || key.toLowerCase().includes('greet')) {
-                            if (typeof value === 'object' && value.price) {
-                                meetGreetPriceInOldSection = parseFloat(value.price) || 0;
-                            } else if (typeof value === 'number') {
-                                meetGreetPriceInOldSection = value;
-                            }
-                            break;
-                        }
-                    }
-                }
-                console.log('🎯 OLD SECTION: Found Meet & Greet price:', meetGreetPriceInOldSection);
-                
-                // Bepaal luchthaven pickup voor Meet & Greet
-                const fromAirport = step1Data.fromLocation?.toLowerCase().includes('airport') || 
-                                  step1Data.fromLocation?.toLowerCase().includes('luchthaven') ||
-                                  step1Data.fromLocation?.toLowerCase().includes('zaventem');
-                const toAirport = step1Data.toLocation?.toLowerCase().includes('airport') || 
-                                step1Data.toLocation?.toLowerCase().includes('luchthaven') ||
-                                step1Data.toLocation?.toLowerCase().includes('zaventem');
-                
-                // Bereken toeslagen per rit - INCLUSIEF AUTOMATISCHE STOPOVER
-                let heenToeslagen = 0;
-                let terugToeslagen = 0;
-                
-                // 1. Verwerk handmatige surcharges
-                if (actualSurcharges && Object.keys(actualSurcharges).length > 0) {
-                    Object.entries(actualSurcharges).forEach(([key, value]) => {
-                        if (key === 'totalSurcharge' || key === 'surchargeTotal') return;
-                        
-                        let itemPrice = 0;
-                        if (typeof value === 'object' && value !== null && value.price) {
-                            itemPrice = parseFloat(value.price) || 0;
-                            const itemQuantity = parseInt(value.quantity) || 1;
-                            itemPrice = itemPrice * itemQuantity;
-                        } else if (typeof value === 'number' && value > 0) {
-                            itemPrice = value;
-                        }
-                        
-                        // Meet & Greet: alleen bij rit die VANAF luchthaven vertrekt
-                        if (key.toLowerCase().includes('meet') || key.toLowerCase().includes('greet')) {
-                            if (fromAirport) {
-                                heenToeslagen += itemPrice; // HEEN: vanaf luchthaven
-                            } else if (toAirport) {
-                                terugToeslagen += itemPrice; // TERUG: vanaf luchthaven  
-                            }
-                        } else {
-                            // Andere toeslagen: verdeel gelijk over beide ritten
-                            heenToeslagen += itemPrice / 2;
-                            terugToeslagen += itemPrice / 2;
-                        }
-                    });
-                }
-                
-                // 2. Voeg stopover toeslagen toe gebaseerd op Item-surcharge instellingen
-                const extraStopCount = parseInt(step1Data.extraStopCount) || 0;
-                if (extraStopCount > 0) {
-                    // Haal stopover prijs op uit Item-surcharge instellingen
-                    const surchargeItems = JSON.parse(localStorage.getItem('bookingSurchargeItems') || '{}');
-                    let stopoverPricePerStop = 0;
-                    
-                    if (surchargeItems.fixed) {
-                        const stopoverItem = surchargeItems.fixed.find(item => 
-                            item.name.toLowerCase().includes('stopover') ||
-                            item.name.toLowerCase().includes('stop')
-                        );
-                        if (stopoverItem) {
-                            stopoverPricePerStop = parseFloat(stopoverItem.price) || 0;
-                        }
-                    }
-                    
-                    if (stopoverPricePerStop > 0) {
-                        const stopoverPerRit = extraStopCount * stopoverPricePerStop;
-                        heenToeslagen += stopoverPerRit;
-                        terugToeslagen += stopoverPerRit;
-                        console.log(`💰 Adding stopover: ${extraStopCount} stops × €${stopoverPricePerStop} = €${stopoverPerRit} per rit`);
-                    }
-                }
-                
-                // Use step2 final price instead of recalculating
-                const step2FinalPrice = parseFloat(localStorage.getItem('step2FinalTotalPrice') || '0');
-                let heenTotaal, terugTotaal;
-                
-                console.log('🔧 DEBUG: step2FinalPrice =', step2FinalPrice, 'type =', typeof step2FinalPrice);
-                if (step2FinalPrice > 0) {
-                    console.log('🔧 DEBUG: Entering step2FinalPrice > 0 block');
-                    finalTotalPrice = step2FinalPrice;
-                    
-                    // Find Meet & Greet price for correct distribution
-                    console.log('🎯 MEET & GREET DISTRIBUTION: Looking for Meet & Greet in surcharges...');
-                    let meetGreetPrice = 0;
-                    if (surchargeData && surchargeData.selectedSurcharges) {
-                        for (const [key, value] of Object.entries(surchargeData.selectedSurcharges)) {
-                            if (key.toLowerCase().includes('meet') || key.toLowerCase().includes('greet')) {
-                                if (typeof value === 'object' && value.price) {
-                                    meetGreetPrice = parseFloat(value.price) || 0;
-                                } else if (typeof value === 'number') {
-                                    meetGreetPrice = value;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    
-                    console.log('🎯 MEET & GREET FOUND:', meetGreetPrice);
-                    
-                    // Calculate individual trip prices with Meet & Greet on return trip
-                    if (meetGreetPrice > 0) {
-                        // Meet & Greet goes on terug trip (pickup FROM airport)
-                        const basePricePerTrip = (step2FinalPrice - meetGreetPrice) / 2;
-                        heenTotaal = basePricePerTrip;
-                        terugTotaal = basePricePerTrip + meetGreetPrice;
-                        console.log('💰 INDIVIDUAL PRICES: Heen €' + heenTotaal + ', Terug €' + terugTotaal);
-                    } else {
-                        // No Meet & Greet, just split evenly
-                        heenTotaal = step2FinalPrice / 2;
-                        terugTotaal = step2FinalPrice / 2;
-                        console.log('💰 NO MEET & GREET: Split evenly €' + heenTotaal + ' each');
-                    }
-                } else {
-                    // Fallback to calculation if no step2 price
-                    heenTotaal = perRitBasisPrijs + heenToeslagen;
-                    terugTotaal = perRitBasisPrijs + terugToeslagen;
-                    finalTotalPrice = heenTotaal + terugTotaal;
-                }
-                
-                console.log('💰 RETURN TRIP - Using STEP 2 final price:', {
-                    step2FinalPrice: step2FinalPrice,
-                    finalTotalPrice: finalTotalPrice,
-                    displayAsHeenTerug: finalTotalPrice / 2
-                });
-                
-                // 🚨 MARCEL FIX: Alleen totaal prijs tonen
                 priceBreakdownHTML = `
                     <div class="overview-total">
                         <div class="overview-total-row" style="font-weight: 700; font-size: 18px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
@@ -1448,17 +1315,6 @@
                     </div>
                 `;
             } else {
-                // ENKELE RIT: gebruik EXACT STAP 2 finale prijs (inclusief last-minute)
-                const step2FinalPrice = parseFloat(localStorage.getItem('step2FinalTotalPrice') || '0');
-                finalTotalPrice = step2FinalPrice > 0 ? step2FinalPrice : originalBasePrice + parseFloat(surchargeData?.surchargeTotal || 0);
-                
-                console.log('💰 ENKELE RIT - Using STEP 2 final price:', {
-                    step2FinalPrice: step2FinalPrice,
-                    basisPrijs: originalBasePrice,
-                    surchargeTotal: surchargeData?.surchargeTotal,
-                    finalTotal: finalTotalPrice
-                });
-                
                 priceBreakdownHTML = `
                     <div class="overview-total">
                         <div class="overview-total-row">
@@ -1469,10 +1325,7 @@
                 `;
             }
             
-            // Force update the price display
-            console.log(`💰 DEFINITIEVE TOTAAL PRIJS: ${finalTotalPrice}`);
-            
-            // Toon de prijs breakdown
+            // Add the price breakdown to HTML
             html += priceBreakdownHTML;
             
             body.innerHTML = html;
@@ -2181,9 +2034,9 @@ Voertuig: ${returnVehicle?.vehicle?.name || 'Niet gespecificeerd'}`;
             console.log(`EINDTOTAAL: €${finalTotal}`);
             
             // Test surcharge items
-            const actualSurcharges = surchargeData?.selectedSurcharges || {};
+            const selectedSurcharges = surchargeData?.selectedSurcharges || {};
             console.log('EXTRA OPTIES:');
-            Object.entries(actualSurcharges).forEach(([key, value]) => {
+            Object.entries(selectedSurcharges).forEach(([key, value]) => {
                 if (key !== 'totalSurcharge' && value?.name && value?.price > 0) {
                     console.log(`  ${value.name}: €${value.price}`);
                 }
