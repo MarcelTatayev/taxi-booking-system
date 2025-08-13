@@ -1232,8 +1232,17 @@
                         if (key === 'totalSurcharge' || key === 'surchargeTotal') return;
                         
                         if (typeof value === 'object' && value !== null && value.name) {
-                            const itemPrice = parseFloat(value.price) || 0;
+                            let itemPrice = parseFloat(value.price) || 0;
                             const itemQuantity = parseInt(value.quantity) || 1;
+                            
+                            // Fix: If return trip and price seems halved, restore to full price
+                            // BUT NOT for Meet & Greet or Stopover (those are already correct prices)
+                            if (step1Data.returnActive === 'true' && itemPrice > 0 && 
+                                !key.toLowerCase().includes('meet') && !key.toLowerCase().includes('greet') &&
+                                !key.toLowerCase().includes('stopover') && !key.toLowerCase().includes('via')) {
+                                itemPrice = itemPrice * 2;
+                            }
+                            
                             const totalItemPrice = itemPrice * itemQuantity;
                             
                             if (itemPrice > 0) {
@@ -1253,8 +1262,17 @@
                 if (hasAutomaticCharges) {
                     Object.entries(automaticCharges).forEach(([key, value]) => {
                         if (typeof value === 'object' && value !== null && value.name) {
-                            const itemPrice = parseFloat(value.price) || 0;
+                            let itemPrice = parseFloat(value.price) || 0;
                             const itemQuantity = parseInt(value.quantity) || 1;
+                            
+                            // Fix: If return trip and price seems halved, restore to full price
+                            // BUT NOT for Meet & Greet or Stopover (those are already correct prices)
+                            if (step1Data.returnActive === 'true' && itemPrice > 0 && 
+                                !key.toLowerCase().includes('meet') && !key.toLowerCase().includes('greet') &&
+                                !key.toLowerCase().includes('stopover') && !key.toLowerCase().includes('via')) {
+                                itemPrice = itemPrice * 2;
+                            }
+                            
                             const totalItemPrice = itemPrice * itemQuantity;
                             
                             if (itemPrice > 0) {
