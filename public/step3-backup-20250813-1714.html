@@ -1256,23 +1256,8 @@
                             // DEBUG: Log raw surcharge value object
                             console.log(`[DEBUG] Manual Surcharge - Key: ${key}, Raw value:`, value);
                             
-                            let itemPrice = parseFloat(value.price) || 0;
+                            const itemPrice = parseFloat(value.price) || 0;
                             const itemQuantity = parseInt(value.quantity) || 1;
-                            
-                            // For return trips: Double surcharge prices in overview (except Meet & Greet and Stopover)
-                            // Child seats, Dog, etc. should show full price for entire journey
-                            if (step1Data.returnActive === 'true') {
-                                const isMeetGreet = key.toLowerCase().includes('meet') || key.toLowerCase().includes('greet');
-                                const isStopover = key.toLowerCase().includes('stopover') || key.toLowerCase().includes('via');
-                                if (!isMeetGreet && !isStopover) {
-                                    // Double the price to show full journey cost in overview
-                                    itemPrice = itemPrice * 2;
-                                    console.log(`[DEBUG] Return trip: Doubled price for ${value.name}: €${itemPrice} (full journey)`);
-                                } else if (isStopover) {
-                                    console.log(`[DEBUG] Return trip: Stopover not doubled: ${value.name}: €${itemPrice} (per-stop pricing)`);
-                                }
-                            }
-                            
                             const totalItemPrice = itemPrice * itemQuantity;
                             
                             // DEBUG: Log calculated values
@@ -1298,22 +1283,8 @@
                             // DEBUG: Log raw automatic charge value object
                             console.log(`[DEBUG] Automatic Charge - Key: ${key}, Raw value:`, value);
                             
-                            let itemPrice = parseFloat(value.price) || 0;
+                            const itemPrice = parseFloat(value.price) || 0;
                             const itemQuantity = parseInt(value.quantity) || 1;
-                            
-                            // For return trips: Double automatic charge prices in overview (except Meet & Greet and Stopover)
-                            if (step1Data.returnActive === 'true') {
-                                const isMeetGreet = key.toLowerCase().includes('meet') || key.toLowerCase().includes('greet');
-                                const isStopover = key.toLowerCase().includes('stopover') || key.toLowerCase().includes('via');
-                                if (!isMeetGreet && !isStopover) {
-                                    // Double the price to show full journey cost in overview
-                                    itemPrice = itemPrice * 2;
-                                    console.log(`[DEBUG] Return trip: Doubled automatic charge for ${value.name}: €${itemPrice} (full journey)`);
-                                } else if (isStopover) {
-                                    console.log(`[DEBUG] Return trip: Stopover not doubled: ${value.name}: €${itemPrice} (per-stop pricing)`);
-                                }
-                            }
-                            
                             const totalItemPrice = itemPrice * itemQuantity;
                             
                             // DEBUG: Log calculated values
@@ -1860,8 +1831,7 @@
             console.log('📧 CRITICAL DEBUG - Object.values(surchargeData):', Object.values(surchargeData));
 
             // Generate shared base code for heen/terug trips
-            const isReturnTrip = step1Data.returnActive === 'true';
-            const sharedBaseCode = generateBookingId('heen', null, isReturnTrip).replace(/[ab]$/, ''); // Remove suffix to get base code
+            const sharedBaseCode = generateBookingId('heen').slice(0, -1); // Remove the 'a' suffix to get base code
             
             // Handle both old and new vehicle selection formats
             let outboundVehicle, returnVehicle;
@@ -1931,7 +1901,7 @@
                 vehicle: outboundVehicle,
                 surcharges: surchargeData, // 🆕 Include surcharge data (including Meet & Greet locations)
                 bookingDate: new Date().toISOString(),
-                bookingId: generateBookingId('heen', sharedBaseCode, isReturnTrip),
+                bookingId: generateBookingId('heen', sharedBaseCode),
                 // Add individual trip price for heen
                 tripPrice: heenTripPrice,
                 totalPrice: finalTotalPrice
@@ -1994,7 +1964,7 @@
                     },
                     surcharges: returnSurchargeData,
                     bookingDate: new Date().toISOString(),
-                    bookingId: generateBookingId('terug', sharedBaseCode, isReturnTrip),
+                    bookingId: generateBookingId('terug', sharedBaseCode),
                     // Add individual trip price for terug
                     tripPrice: terugTripPrice,
                     totalPrice: finalTotalPrice
@@ -2147,7 +2117,7 @@ Voertuig: ${returnVehicle?.vehicle?.name || 'Niet gespecificeerd'}`;
             }, 3000);
         }
 
-        function generateBookingId(tripType, baseCode = null, isReturnTrip = false) {
+        function generateBookingId(tripType, baseCode = null) {
             // Generate short 6-character base code like "0OCQ3K"
             if (!baseCode) {
                 const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -2157,14 +2127,9 @@ Voertuig: ${returnVehicle?.vehicle?.name || 'Niet gespecificeerd'}`;
                 }
             }
             
-            // Only add suffix for return trips: 'a' for heen, 'b' for terug
-            // Single trips get no suffix
-            if (isReturnTrip) {
-                const suffix = tripType === 'terug' ? 'b' : 'a';
-                return baseCode + suffix;
-            } else {
-                return baseCode; // No suffix for single trips
-            }
+            // Add suffix: 'a' for heen, 'b' for terug
+            const suffix = tripType === 'terug' ? 'b' : 'a';
+            return baseCode + suffix;
         }
         
         function isAirportLocation(location) {

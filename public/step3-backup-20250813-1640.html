@@ -1230,15 +1230,11 @@
                 </div>
             `;
             
-            // Extra Opties Section - Display ALL surcharges (selected + automatic)
-            const selectedSurcharges = surchargeData?.selectedSurcharges || {};
-            const automaticCharges = surchargeData?.automaticCharges || {};
+            // Extra Opties Section - Simple display of selected surcharges
+            const actualSurcharges = surchargeData?.selectedSurcharges || surchargeData;
             const surchargeTotal = surchargeData?.surchargeTotal || surchargeData?.totalSurcharge || 0;
             
-            const hasSelectedSurcharges = selectedSurcharges && Object.keys(selectedSurcharges).length > 0;
-            const hasAutomaticCharges = automaticCharges && Object.keys(automaticCharges).length > 0;
-            
-            if (hasSelectedSurcharges || hasAutomaticCharges || surchargeTotal > 0) {
+            if (actualSurcharges && Object.keys(actualSurcharges).length > 0) {
                 html += `
                     <div class="overview-section">
                         <div class="overview-section-title">Extra Opties</div>
@@ -1246,91 +1242,27 @@
                 
                 let hasShownAnyItems = false;
                 
-                // Display manually selected surcharges
-                if (hasSelectedSurcharges) {
-                    Object.entries(selectedSurcharges).forEach(([key, value]) => {
-                        // Skip technical fields
-                        if (key === 'totalSurcharge' || key === 'surchargeTotal') return;
+                // Simply display surcharge items as they were selected in step2
+                Object.entries(actualSurcharges).forEach(([key, value]) => {
+                    // Skip technical fields
+                    if (key === 'totalSurcharge' || key === 'surchargeTotal') return;
+                    
+                    if (typeof value === 'object' && value !== null && value.name) {
+                        const itemPrice = parseFloat(value.price) || 0;
+                        const itemQuantity = parseInt(value.quantity) || 1;
+                        const totalItemPrice = itemPrice * itemQuantity;
                         
-                        if (typeof value === 'object' && value !== null && value.name) {
-                            // DEBUG: Log raw surcharge value object
-                            console.log(`[DEBUG] Manual Surcharge - Key: ${key}, Raw value:`, value);
-                            
-                            let itemPrice = parseFloat(value.price) || 0;
-                            const itemQuantity = parseInt(value.quantity) || 1;
-                            
-                            // For return trips: Double surcharge prices in overview (except Meet & Greet and Stopover)
-                            // Child seats, Dog, etc. should show full price for entire journey
-                            if (step1Data.returnActive === 'true') {
-                                const isMeetGreet = key.toLowerCase().includes('meet') || key.toLowerCase().includes('greet');
-                                const isStopover = key.toLowerCase().includes('stopover') || key.toLowerCase().includes('via');
-                                if (!isMeetGreet && !isStopover) {
-                                    // Double the price to show full journey cost in overview
-                                    itemPrice = itemPrice * 2;
-                                    console.log(`[DEBUG] Return trip: Doubled price for ${value.name}: €${itemPrice} (full journey)`);
-                                } else if (isStopover) {
-                                    console.log(`[DEBUG] Return trip: Stopover not doubled: ${value.name}: €${itemPrice} (per-stop pricing)`);
-                                }
-                            }
-                            
-                            const totalItemPrice = itemPrice * itemQuantity;
-                            
-                            // DEBUG: Log calculated values
-                            console.log(`[DEBUG] Manual Surcharge - ${value.name}: itemPrice=${itemPrice}, itemQuantity=${itemQuantity}, totalItemPrice=${totalItemPrice}`);
-                            
-                            if (itemPrice > 0) {
-                                html += `
-                                    <div class="overview-row">
-                                        <span class="overview-label">${value.name}</span>
-                                        <span class="overview-value">€${totalItemPrice.toFixed(2)}</span>
-                                    </div>
-                                `;
-                                hasShownAnyItems = true;
-                            }
+                        if (itemPrice > 0) {
+                            html += `
+                                <div class="overview-row">
+                                    <span class="overview-label">${value.name}</span>
+                                    <span class="overview-value">€${totalItemPrice.toFixed(2)}</span>
+                                </div>
+                            `;
+                            hasShownAnyItems = true;
                         }
-                    });
-                }
-                
-                // Display automatic charges (like stopover)
-                if (hasAutomaticCharges) {
-                    Object.entries(automaticCharges).forEach(([key, value]) => {
-                        if (typeof value === 'object' && value !== null && value.name) {
-                            // DEBUG: Log raw automatic charge value object
-                            console.log(`[DEBUG] Automatic Charge - Key: ${key}, Raw value:`, value);
-                            
-                            let itemPrice = parseFloat(value.price) || 0;
-                            const itemQuantity = parseInt(value.quantity) || 1;
-                            
-                            // For return trips: Double automatic charge prices in overview (except Meet & Greet and Stopover)
-                            if (step1Data.returnActive === 'true') {
-                                const isMeetGreet = key.toLowerCase().includes('meet') || key.toLowerCase().includes('greet');
-                                const isStopover = key.toLowerCase().includes('stopover') || key.toLowerCase().includes('via');
-                                if (!isMeetGreet && !isStopover) {
-                                    // Double the price to show full journey cost in overview
-                                    itemPrice = itemPrice * 2;
-                                    console.log(`[DEBUG] Return trip: Doubled automatic charge for ${value.name}: €${itemPrice} (full journey)`);
-                                } else if (isStopover) {
-                                    console.log(`[DEBUG] Return trip: Stopover not doubled: ${value.name}: €${itemPrice} (per-stop pricing)`);
-                                }
-                            }
-                            
-                            const totalItemPrice = itemPrice * itemQuantity;
-                            
-                            // DEBUG: Log calculated values
-                            console.log(`[DEBUG] Automatic Charge - ${value.name}: itemPrice=${itemPrice}, itemQuantity=${itemQuantity}, totalItemPrice=${totalItemPrice}`);
-                            
-                            if (itemPrice > 0) {
-                                html += `
-                                    <div class="overview-row">
-                                        <span class="overview-label">${value.name}</span>
-                                        <span class="overview-value">€${totalItemPrice.toFixed(2)}</span>
-                                    </div>
-                                `;
-                                hasShownAnyItems = true;
-                            }
-                        }
-                    });
-                }
+                    }
+                });
                 
                 // If no individual items shown but there's a total, show it
                 if (!hasShownAnyItems && surchargeTotal > 0) {
@@ -1400,8 +1332,8 @@
                 let terugToeslagen = 0;
                 
                 // 1. Verwerk handmatige surcharges
-                if (selectedSurcharges && Object.keys(selectedSurcharges).length > 0) {
-                    Object.entries(selectedSurcharges).forEach(([key, value]) => {
+                if (actualSurcharges && Object.keys(actualSurcharges).length > 0) {
+                    Object.entries(actualSurcharges).forEach(([key, value]) => {
                         if (key === 'totalSurcharge' || key === 'surchargeTotal') return;
                         
                         let itemPrice = 0;
@@ -1421,9 +1353,9 @@
                                 terugToeslagen += itemPrice; // TERUG: vanaf luchthaven  
                             }
                         } else {
-                            // Andere toeslagen: toepassen op volledige rit (niet delen door 2)
-                            // Kinderzitjes, extra waiting time etc. gelden voor hele reis
-                            heenToeslagen += itemPrice;
+                            // Andere toeslagen: verdeel gelijk over beide ritten
+                            heenToeslagen += itemPrice / 2;
+                            terugToeslagen += itemPrice / 2;
                         }
                     });
                 }
@@ -1503,8 +1435,7 @@
                 console.log('💰 RETURN TRIP - Using STEP 2 final price:', {
                     step2FinalPrice: step2FinalPrice,
                     finalTotalPrice: finalTotalPrice,
-                    heenTotaal: heenTotaal,
-                    terugTotaal: terugTotaal
+                    displayAsHeenTerug: finalTotalPrice / 2
                 });
                 
                 // 🚨 MARCEL FIX: Alleen totaal prijs tonen
@@ -1860,8 +1791,7 @@
             console.log('📧 CRITICAL DEBUG - Object.values(surchargeData):', Object.values(surchargeData));
 
             // Generate shared base code for heen/terug trips
-            const isReturnTrip = step1Data.returnActive === 'true';
-            const sharedBaseCode = generateBookingId('heen', null, isReturnTrip).replace(/[ab]$/, ''); // Remove suffix to get base code
+            const sharedBaseCode = generateBookingId('heen').slice(0, -1); // Remove the 'a' suffix to get base code
             
             // Handle both old and new vehicle selection formats
             let outboundVehicle, returnVehicle;
@@ -1931,7 +1861,7 @@
                 vehicle: outboundVehicle,
                 surcharges: surchargeData, // 🆕 Include surcharge data (including Meet & Greet locations)
                 bookingDate: new Date().toISOString(),
-                bookingId: generateBookingId('heen', sharedBaseCode, isReturnTrip),
+                bookingId: generateBookingId('heen', sharedBaseCode),
                 // Add individual trip price for heen
                 tripPrice: heenTripPrice,
                 totalPrice: finalTotalPrice
@@ -1994,7 +1924,7 @@
                     },
                     surcharges: returnSurchargeData,
                     bookingDate: new Date().toISOString(),
-                    bookingId: generateBookingId('terug', sharedBaseCode, isReturnTrip),
+                    bookingId: generateBookingId('terug', sharedBaseCode),
                     // Add individual trip price for terug
                     tripPrice: terugTripPrice,
                     totalPrice: finalTotalPrice
@@ -2147,7 +2077,7 @@ Voertuig: ${returnVehicle?.vehicle?.name || 'Niet gespecificeerd'}`;
             }, 3000);
         }
 
-        function generateBookingId(tripType, baseCode = null, isReturnTrip = false) {
+        function generateBookingId(tripType, baseCode = null) {
             // Generate short 6-character base code like "0OCQ3K"
             if (!baseCode) {
                 const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -2157,14 +2087,9 @@ Voertuig: ${returnVehicle?.vehicle?.name || 'Niet gespecificeerd'}`;
                 }
             }
             
-            // Only add suffix for return trips: 'a' for heen, 'b' for terug
-            // Single trips get no suffix
-            if (isReturnTrip) {
-                const suffix = tripType === 'terug' ? 'b' : 'a';
-                return baseCode + suffix;
-            } else {
-                return baseCode; // No suffix for single trips
-            }
+            // Add suffix: 'a' for heen, 'b' for terug
+            const suffix = tripType === 'terug' ? 'b' : 'a';
+            return baseCode + suffix;
         }
         
         function isAirportLocation(location) {
@@ -2256,9 +2181,9 @@ Voertuig: ${returnVehicle?.vehicle?.name || 'Niet gespecificeerd'}`;
             console.log(`EINDTOTAAL: €${finalTotal}`);
             
             // Test surcharge items
-            const selectedSurcharges = surchargeData?.selectedSurcharges || {};
+            const actualSurcharges = surchargeData?.selectedSurcharges || {};
             console.log('EXTRA OPTIES:');
-            Object.entries(selectedSurcharges).forEach(([key, value]) => {
+            Object.entries(actualSurcharges).forEach(([key, value]) => {
                 if (key !== 'totalSurcharge' && value?.name && value?.price > 0) {
                     console.log(`  ${value.name}: €${value.price}`);
                 }

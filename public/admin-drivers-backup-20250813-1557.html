@@ -182,7 +182,7 @@
             alert(`Auto-assign functionality for booking ${bookingId} - Coming soon!`);
         }
 
-        //  GET DRIVER OPTIONS HTML
+        // 🚗 GET DRIVER OPTIONS HTML
         function getDriverOptionsHTML(selectedDriver) {
             const drivers = JSON.parse(localStorage.getItem('taxiDrivers') || '[]');
             let html = '';
@@ -196,7 +196,7 @@
             return html || '<option value="">No drivers available</option>';
         }
 
-        //  ASSIGN DRIVER TO BOOKING
+        // 🚗 ASSIGN DRIVER TO BOOKING
         function assignDriverToBooking(bookingId, driverValue) {
             console.log(`Assigning driver ${driverValue} to booking ${bookingId}`);
             
@@ -279,7 +279,7 @@ Er is een nieuwe taxirit beschikbaar:
 📍 Ophalen: {pickup}
 📍 Bestemming: {destination}
 👤 Klant: {customer} - {phone}
- Voertuig: {vehicle}
+🚗 Voertuig: {vehicle}
 💰 Prijs: €{price}
 📋 Opmerkingen: {notes}
 
@@ -297,7 +297,7 @@ BELANGRIJKE RIT DETAILS:
 📍 Ophalen: {pickup}
 📍 Bestemming: {destination}
 👤 Klant: {customer} - {phone}
- Voertuig: {vehicle}
+🚗 Voertuig: {vehicle}
 💰 Prijs: €{price}
 📋 Opmerkingen: {notes}
 
@@ -317,7 +317,7 @@ Een klant heeft dringend een taxi nodig:
 📍 Ophalen: {pickup}
 📍 Bestemming: {destination}
 👤 Klant: {customer} - {phone}
- Voertuig: {vehicle}
+🚗 Voertuig: {vehicle}
 💰 Prijs: €{price}
 📋 Opmerkingen: {notes}
 
@@ -646,8 +646,8 @@ Taxi Dispatch Team`
                         'trash': '🗑️ Trash',
                         'distance-time': '💰 Distance & Time Pricing',
                         'dispatch': '🚨 Dispatch Center',
-                        'drivers': ' TEST - Driver Management',
-                        'vehicle-manager': ' Vehicle Manager',
+                        'drivers': '🚗 TEST - Driver Management',
+                        'vehicle-manager': '🚗 Vehicle Manager',
                         'general': '⚙️ General Settings',
                         'mail': '📧 Email Settings',
                         'item-surcharge': '💰 Item Surcharge',
@@ -712,7 +712,7 @@ Taxi Dispatch Team`
                         
                         // Force load vehicles with additional timeout to ensure DOM is ready
                         setTimeout(() => {
-                            console.log(' Force loading dispatch vehicles...');
+                            console.log('🚗 Force loading dispatch vehicles...');
                             const vehicleSelect = document.getElementById('dispatchVehicleSelect');
                             if (vehicleSelect) {
                                 console.log('✅ Vehicle dropdown found, loading vehicles...');
@@ -738,14 +738,14 @@ Taxi Dispatch Team`
                                 // Add Unassigned option first
                                 const unassignedOption = document.createElement('option');
                                 unassignedOption.value = '';
-                                unassignedOption.textContent = ' Unassigned';
+                                unassignedOption.textContent = '🚗 Unassigned';
                                 vehicleSelect.appendChild(unassignedOption);
                                 
                                 // Add all vehicles
                                 taxiVehicles.forEach(vehicle => {
                                     const option = document.createElement('option');
                                     option.value = vehicle.id;
-                                    option.textContent = ` ${vehicle.name} (${vehicle.passengers} seats)`;
+                                    option.textContent = `🚗 ${vehicle.name} (${vehicle.passengers} seats)`;
                                     vehicleSelect.appendChild(option);
                                     console.log(`➕ Added: ${vehicle.name}`);
                                 });
@@ -758,7 +758,7 @@ Taxi Dispatch Team`
                     }, 200);
                 }
                 if (sectionName === 'vehicle-manager') {
-                    console.log(' Vehicle Manager section loading...');
+                    console.log('🚗 Vehicle Manager section loading...');
                     setTimeout(() => {
                         console.log('🔄 Loading Vehicle Manager data...');
                         if (typeof loadVehicleManagerData === 'function') {
@@ -1681,7 +1681,7 @@ Taxi Dispatch Team`
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2> Marcel's Taxi Pro</h2>
+                <h2>🚗 Marcel's Taxi Pro</h2>
                 <p>Professional Admin Panel</p>
             </div>
 
@@ -1733,7 +1733,7 @@ Taxi Dispatch Team`
 
                 <li class="nav-item">
                     <a class="nav-link" onclick="showSection('vehicle-manager')">
-                         Vehicle Manager
+                        🚗 Vehicle Manager
                     </a>
                 </li>
 
@@ -1750,7 +1750,7 @@ Taxi Dispatch Team`
                     <ul class="nav-submenu" id="settings-menu">
                         <li><a class="nav-link" onclick="showSection('general')">⚙️ General Settings</a></li>
                         <!-- DUPLICATE SECTION - DISABLED: same as Vehicle Manager
-                        <li><a class="nav-link" onclick="showSection('types-of-vehicles')"> Types of Vehicles</a></li>
+                        <li><a class="nav-link" onclick="showSection('types-of-vehicles')">🚗 Types of Vehicles</a></li>
                         -->
                         <li><a class="nav-link" onclick="showSection('payment-methods')">💳 Payment Methods</a></li>
                         <li><a class="nav-link" onclick="showSection('notifications')">🔔 Notifications</a></li>
@@ -1870,7 +1870,7 @@ Taxi Dispatch Team`
                                     </div>
                                     <div style="position: relative;">
                                         <select id="dispatchVehicleSelect" style="width: 80%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white; color: #666; cursor: pointer;">
-                                            <option> Unassigned</option>
+                                            <option>🚗 Unassigned</option>
                                         </select>
                                     </div>
                                     
@@ -2247,7 +2247,7 @@ Taxi Dispatch Team`
                                                                               background: white; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
                                             onfocus="this.style.borderColor='#007bff'; this.style.boxShadow='0 4px 15px rgba(0,123,255,0.15)'"
                                             onblur="this.style.borderColor='#e9ecef'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
-                                        <option value="saloon"> Saloon</option>
+                                        <option value="saloon">🚗 Saloon</option>
                                         <option value="estate">🚙 Estate</option>
                                         <option value="minivan">🚐 Minivan</option>
                                         <option value="minivan_long">🚌 Minivan Long</option>
@@ -2465,7 +2465,7 @@ Taxi Dispatch Team`
                 <div id="types-of-vehicles-section" class="content-section">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                         <div>
-                            <h2> Types of Vehicles</h2>
+                            <h2>🚗 Types of Vehicles</h2>
                             <p>Manage your vehicle fleet and specifications</p>
                         </div>
                         <button class="btn btn-primary" onclick="openAddVehicleModal()">
@@ -3351,7 +3351,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                     
                     <div id="vehiclePricingContainer" style="margin-top: 30px;">
                         <div style="text-align: center; padding: 40px; color: #6c757d; border: 2px dashed #dee2e6; border-radius: 8px;">
-                            <h3> Loading vehicles from Types of Vehicles...</h3>
+                            <h3>🚗 Loading vehicles from Types of Vehicles...</h3>
                             <p>Vehicle pricing cards will appear here automatically</p>
                         </div>
                     </div>
@@ -3912,7 +3912,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
 
                                 <!-- Voertuig -->
                                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                                    <h3 class="text-color"> Voertuig</h3>
+                                    <h3 class="text-color">🚗 Voertuig</h3>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                         <div>
                                             <label class="form-label">Merk</label>
@@ -4352,7 +4352,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
 
                 <!-- Trip Information -->
                 <div class="edit-section">
-                    <h3> Trip Information</h3>
+                    <h3>🚗 Trip Information</h3>
                     <div class="edit-row">
                         <div class="edit-field">
                             <label>From Location</label>
@@ -4568,7 +4568,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
 
                 <!-- Vehicle Section -->
                 <div class="driver-form-section" style="margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
-                    <h3 style="margin: 0 0 20px 0; color: #2c3e50; font-size: 18px; font-weight: 600;"> Voertuiggegevens</h3>
+                    <h3 style="margin: 0 0 20px 0; color: #2c3e50; font-size: 18px; font-weight: 600;">🚗 Voertuiggegevens</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div>
                             <label class="form-label-gray">Merk *</label>
@@ -4696,8 +4696,8 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                         'trash': '🗑️ Trash',
                         'distance-time': '💰 Distance & Time Pricing',
                         'dispatch': '🚨 Dispatch Center',
-                        'drivers': ' TEST - Driver Management',
-                        'vehicle-manager': ' Vehicle Manager',
+                        'drivers': '🚗 TEST - Driver Management',
+                        'vehicle-manager': '🚗 Vehicle Manager',
                         'general': '⚙️ General Settings',
                         'mail': '📧 Email Settings',
                         'item-surcharge': '💰 Item Surcharge',
@@ -5091,14 +5091,14 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                 if (container) {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 60px 40px; border: 2px dashed #dee2e6; border-radius: 12px; background: #f8f9fa;">
-                            <div style="font-size: 48px; margin-bottom: 20px;"></div>
+                            <div style="font-size: 48px; margin-bottom: 20px;">🚗</div>
                             <h3 style="color: #495057; margin-bottom: 15px;">Geen voertuigen gevonden</h3>
                             <p style="color: #6c757d; margin-bottom: 25px; font-size: 16px;">
                                 Je moet eerst voertuigen toevoegen in <strong>Types of Vehicles</strong><br>
                                 voordat je prijzen kunt instellen.
                             </p>
                             <button class="btn btn-primary" onclick="showSection('types-of-vehicles')" style="margin-right: 10px;">
-                                 Ga naar Types of Vehicles
+                                🚗 Ga naar Types of Vehicles
                             </button>
                             <button class="btn" style="background: #6c757d; color: white;" onclick="window.open('admin-vehicles.html', '_blank')">
                                 🔧 Open Vehicle Manager
@@ -5127,7 +5127,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                 const pricing = pricingData[vehicle.id] || { minimum: 15.00, pricePerKm: 1.50, longDistancePerKm: 1.20 };
                 
                 // Determine vehicle image source - NEVER overwrite custom uploads
-                let vehicleImage = ''; // fallback emoji
+                let vehicleImage = '🚗'; // fallback emoji
                 if (vehicle.image) {
                     if (vehicle.image.startsWith('data:')) {
                         // Base64 image uploaded from laptop - PROTECTED!
@@ -5139,7 +5139,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                         updateTestResults(`🌐 Using custom external image for ${vehicle.name}`);
                     } else if (vehicle.image.includes('unsplash')) {
                         // Skip default unsplash images - use emoji instead
-                        vehicleImage = '';
+                        vehicleImage = '🚗';
                         updateTestResults(`⚠️ Skipping default image for ${vehicle.name} - using emoji`);
                     }
                 } else {
@@ -5329,7 +5329,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
             localStorage.setItem('bookingSystemVehicles', JSON.stringify(bookingSystemVehicles));
             
             console.log('💰 Dynamic pricing synced to booking system:', bookingSystemPricing);
-            console.log(' Vehicle data synced to booking system:', bookingSystemVehicles.length, 'vehicles');
+            console.log('🚗 Vehicle data synced to booking system:', bookingSystemVehicles.length, 'vehicles');
             updateTestResults(`🔄 Synced ${Object.keys(bookingSystemPricing).length} vehicles with pricing + ${bookingSystemVehicles.length} vehicles to booking system`);
             
             // Update timestamp to trigger booking system refresh
@@ -5578,7 +5578,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
         }
         
         function createDefaultVehicles() {
-            console.log(' Creating default vehicles and pricing...');
+            console.log('🚗 Creating default vehicles and pricing...');
             
             const defaultVehicles = [
                 {
@@ -5788,17 +5788,13 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                     finalTotalPrice = parseFloat(booking.vehicle?.pricing?.totalPrice || booking.vehicle?.pricing?.minimumPrice || booking.vehicle?.price || 50.00);
                 }
                 
-                // Check if it's a single trip (no suffix) or return trip (has 'a' or 'b' suffix)
-                const bookingId = booking.bookingId || '';
-                const hasReturnSuffix = bookingId.endsWith('a') || bookingId.endsWith('b');
-                const hasIndividualTrips = (booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug') && hasReturnSuffix;
+                const hasIndividualTrips = booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug';
                 
                 let total;
                 
                 // Debug: Log the entire booking to see if tripPrice exists
                 console.log(`🔍 DEBUG Booking ${booking.bookingId}:`, {
                     tripType: booking.trip?.tripType,
-                    hasReturnSuffix: hasReturnSuffix,
                     hasIndividualTrips: hasIndividualTrips,
                     tripPrice: booking.tripPrice,
                     hasTripPrice: booking.tripPrice !== undefined,
@@ -7834,10 +7830,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                 const formattedDate = travelDate.toLocaleDateString('nl-BE');
                 const formattedTime = `${booking.trip.travelHour}:${booking.trip.travelMinute}`;
                 
-                // Check if it's a single trip (no suffix) or return trip (has 'a' or 'b' suffix)
-                const bookingId = booking.bookingId || '';
-                const hasReturnSuffix = bookingId.endsWith('a') || bookingId.endsWith('b');
-                const hasIndividualTrips = (booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug') && hasReturnSuffix;
+                const hasIndividualTrips = booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug';
                 let total;
                 
                 if (hasIndividualTrips) {
@@ -9211,10 +9204,7 @@ Both bookings added to confirmed bookings list!`;
                     finalTotalPrice = parseFloat(booking.vehicle?.pricing?.totalPrice || booking.vehicle?.pricing?.minimumPrice || booking.vehicle?.price || 50.00);
                 }
                 
-                // Check if it's a single trip (no suffix) or return trip (has 'a' or 'b' suffix)
-                const bookingId = booking.bookingId || '';
-                const hasReturnSuffix = bookingId.endsWith('a') || bookingId.endsWith('b');
-                const hasIndividualTrips = (booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug') && hasReturnSuffix;
+                const hasIndividualTrips = booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug';
                 
                 let total;
                 
@@ -9730,7 +9720,7 @@ Both bookings added to confirmed bookings list!`;
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="6" class="empty-state">
-                            <h3> No Vehicles Found</h3>
+                            <h3>🚗 No Vehicles Found</h3>
                             <p>Click "Add New Vehicle" to start adding vehicles</p>
                         </td>
                     </tr>
@@ -9745,7 +9735,7 @@ Both bookings added to confirmed bookings list!`;
                 
                 const imageDisplay = vehicle.image ? 
                     `<img src="${vehicle.image}" style="width: 50px; height: 30px; object-fit: cover; border-radius: 4px;">` :
-                    '<span style="font-size: 24px;"></span>';
+                    '<span style="font-size: 24px;">🚗</span>';
 
                 tableHTML += `
                     <tr style="border-bottom: 1px solid #dee2e6;">
@@ -9937,7 +9927,7 @@ Both bookings added to confirmed bookings list!`;
         let editingVehicleManagerIndex = -1;
 
         function loadVehicleManagerData() {
-            console.log(' Loading Vehicle Manager data...');
+            console.log('🚗 Loading Vehicle Manager data...');
             
             const savedVehicles = localStorage.getItem('taxiVehicles');
             if (savedVehicles) {
@@ -10008,7 +9998,7 @@ Both bookings added to confirmed bookings list!`;
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="7" style="text-align: center; padding: 40px; color: #6c757d;">
-                            <div style="font-size: 48px; margin-bottom: 10px;"></div>
+                            <div style="font-size: 48px; margin-bottom: 10px;">🚗</div>
                             <div style="font-size: 18px;">No Vehicles Found</div>
                             <div style="font-size: 14px; margin-top: 5px;">Click "Add New Vehicle" to start adding vehicles</div>
                         </td>
@@ -10024,7 +10014,7 @@ Both bookings added to confirmed bookings list!`;
                 
                 const imageDisplay = vehicle.image ? 
                     `<img src="${vehicle.image}" style="width: 50px; height: 30px; object-fit: cover; border-radius: 4px;">` :
-                    '<span style="font-size: 24px;"></span>';
+                    '<span style="font-size: 24px;">🚗</span>';
 
                 tableHTML += `
                     <tr style="border-bottom: 1px solid #dee2e6;">
@@ -10059,7 +10049,7 @@ Both bookings added to confirmed bookings list!`;
             tableBody.innerHTML = `
                 <tr style="background: red; color: white;">
                     <td colspan="7" style="padding: 20px; font-size: 18px; font-weight: bold;">
-                         TEST: ${vehicleManagerData.length} VEHICLES LOADED - CAN YOU SEE THIS?
+                        🚗 TEST: ${vehicleManagerData.length} VEHICLES LOADED - CAN YOU SEE THIS?
                     </td>
                 </tr>
             `;
@@ -11030,7 +11020,7 @@ Both bookings added to confirmed bookings list!`;
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1> ${templateData.companyName || 'Marcel\'s Taxi'}</h1>
+                        <h1>🚗 ${templateData.companyName || 'Marcel\'s Taxi'}</h1>
                         <h2>${title}</h2>
                     </div>
                     <div class="content">
@@ -11050,7 +11040,7 @@ Both bookings added to confirmed bookings list!`;
                             <p><strong>📍 Naar:</strong> ${sampleBooking.trip.toLocation}</p>
                             <p><strong>📅 Datum:</strong> ${sampleBooking.trip.travelDate}</p>
                             <p><strong>🕐 Tijd:</strong> ${sampleBooking.trip.travelHour}:${sampleBooking.trip.travelMinute}</p>
-                            <p><strong> Voertuig:</strong> ${sampleBooking.vehicle.vehicle.name}</p>
+                            <p><strong>🚗 Voertuig:</strong> ${sampleBooking.vehicle.vehicle.name}</p>
                             <p><strong>💰 Prijs:</strong> €${sampleBooking.vehicle.pricing.minimumPrice}</p>
                         </div>
                         
@@ -12415,7 +12405,7 @@ Both bookings added to confirmed bookings list!`;
                                 border-radius: 10px;
                                 border: 1px solid #bbdefb;
                             ">
-                                <h4 style="margin: 0 0 15px 0; color: #1976d2; font-size: 16px; font-weight: 600;"> Heen Reis</h4>
+                                <h4 style="margin: 0 0 15px 0; color: #1976d2; font-size: 16px; font-weight: 600;">🚗 Heen Reis</h4>
                                 <div style="margin-bottom: 10px;">
                                     <label style="font-weight: 600; color: #1565c0; font-size: 13px;">Van waar:</label>
                                     <div style="margin-top: 4px; color: #0d47a1; font-size: 14px;">${trip.fromLocation || 'Niet opgegeven'}</div>
@@ -12661,10 +12651,7 @@ Both bookings added to confirmed bookings list!`;
             let finalTotal = 0;
             
             const step2FinalPrice = parseFloat(localStorage.getItem('step2FinalTotalPrice') || '0');
-            // Check if it's a single trip (no suffix) or return trip (has 'a' or 'b' suffix)
-            const bookingId = booking.bookingId || '';
-            const hasReturnSuffix = bookingId.endsWith('a') || bookingId.endsWith('b');
-            const hasIndividualTrips = (booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug') && hasReturnSuffix;
+            const hasIndividualTrips = booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug';
             
             console.log(`📋 OVERVIEW MODAL ${booking.bookingId}:`);
             console.log(`   tripType: ${tripType}`);
@@ -12799,7 +12786,7 @@ Both bookings added to confirmed bookings list!`;
                             <!-- Individual Trip Prices - Only show for BOTH trips -->
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                                 <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb;">
-                                    <div style="font-weight: 600; color: #1976d2; margin-bottom: 8px;"> Heen Reis</div>
+                                    <div style="font-weight: 600; color: #1976d2; margin-bottom: 8px;">🚗 Heen Reis</div>
                                     <div style="font-size: 18px; font-weight: 700; color: #0d47a1;">€${heenPrice.toFixed(2)}</div>
                                 </div>
                                 <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid #ce93d8;">
@@ -13661,10 +13648,8 @@ Both bookings added to confirmed bookings list!`;
                 total = parseFloat(booking.vehicle?.pricing?.totalPrice || booking.vehicle?.pricing?.minimumPrice || booking.vehicle?.price || 50.00);
             }
             
-            // Handle return trips - Check if it's a single trip (no suffix) or return trip (has 'a' or 'b' suffix)
-            const bookingId = booking.bookingId || '';
-            const hasReturnSuffix = bookingId.endsWith('a') || bookingId.endsWith('b');
-            const hasIndividualTrips = (booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug') && hasReturnSuffix;
+            // Handle return trips
+            const hasIndividualTrips = booking.trip?.tripType === 'heen' || booking.trip?.tripType === 'terug';
             if (hasIndividualTrips) {
                 let meetGreetPrice = 0;
                 const surchargeData = booking.surcharges;
@@ -14993,7 +14978,7 @@ Both bookings added to confirmed bookings list!`;
             if (vehicles.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 20px; color: #6c757d; border: 2px dashed #dee2e6; border-radius: 8px;">
-                        <h4> Geen voertuigen gevonden</h4>
+                        <h4>🚗 Geen voertuigen gevonden</h4>
                         <p>Configureer eerst voertuigen in Types of Vehicles</p>
                     </div>
                 `;
@@ -15017,7 +15002,7 @@ Both bookings added to confirmed bookings list!`;
                 
                 card.innerHTML = `
                     <h4 style="color: #2c3e50; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                         ${vehicle.name}
+                        🚗 ${vehicle.name}
                     </h4>
                     
                     <div style="margin-bottom: 15px;">
@@ -15143,7 +15128,7 @@ Both bookings added to confirmed bookings list!`;
                         breakdown = `Eerste ${threshold}km: Minimum (€${minimumPrice.toFixed(2)}) + ${threshold}km × €${shortPrice.toFixed(2)} = €${shortCost.toFixed(2)}<br>Volgende ${longKm}km: ${longKm}km × €${longPrice.toFixed(2)} = €${longCost.toFixed(2)}`;
                     }
                     
-                    console.log(` ${vehicle.name}: €${totalCost.toFixed(2)}`);
+                    console.log(`🚗 ${vehicle.name}: €${totalCost.toFixed(2)}`);
                     
                     exampleElement.innerHTML = `
                         <strong>Voorbeeld (${exampleDistance}km):</strong><br>
@@ -16560,7 +16545,7 @@ Both bookings added to confirmed bookings list!`;
                 },
                 vehicle: {
                     vehicle: { 
-                        name: document.querySelector('select option:checked')?.textContent?.replace(' ', '').replace('🚙 ', '').replace('🚐 ', '').replace('🚌 ', '') || 'Saloon' 
+                        name: document.querySelector('select option:checked')?.textContent?.replace('🚗 ', '').replace('🚙 ', '').replace('🚐 ', '').replace('🚌 ', '') || 'Saloon' 
                     }
                 },
                 driver: null,
@@ -16628,7 +16613,7 @@ Both bookings added to confirmed bookings list!`;
                 return;
             }
             
-            console.log(' Loading vehicles into dispatch form...');
+            console.log('🚗 Loading vehicles into dispatch form...');
             
             // Get vehicles from admin Vehicle Manager
             let taxiVehicles = JSON.parse(localStorage.getItem('taxiVehicles') || '[]');
@@ -16659,14 +16644,14 @@ Both bookings added to confirmed bookings list!`;
             // Add Unassigned option first
             const unassignedOption = document.createElement('option');
             unassignedOption.value = '';
-            unassignedOption.textContent = ' Unassigned';
+            unassignedOption.textContent = '🚗 Unassigned';
             vehicleSelect.appendChild(unassignedOption);
             
             // Add vehicles to dropdown
             taxiVehicles.forEach(vehicle => {
                 const option = document.createElement('option');
                 option.value = vehicle.id;
-                option.textContent = ` ${vehicle.name} (${vehicle.passengers} seats)`;
+                option.textContent = `🚗 ${vehicle.name} (${vehicle.passengers} seats)`;
                 vehicleSelect.appendChild(option);
                 console.log(`➕ Added vehicle: ${vehicle.name}`);
             });
