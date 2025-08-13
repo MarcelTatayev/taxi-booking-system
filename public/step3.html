@@ -1230,15 +1230,9 @@
                 </div>
             `;
             
-            // Extra Opties Section - FIXED data structure issue
-            console.log('🔍 CHECKING SURCHARGES FOR DISPLAY:', surchargeData);
-            
-            // Get the actual surcharges from the nested structure
+            // Extra Opties Section - Simple display of selected surcharges
             const actualSurcharges = surchargeData?.selectedSurcharges || surchargeData;
             const surchargeTotal = surchargeData?.surchargeTotal || surchargeData?.totalSurcharge || 0;
-            
-            console.log('🔍 ACTUAL SURCHARGES:', actualSurcharges);
-            console.log('🔍 SURCHARGE TOTAL:', surchargeTotal);
             
             if (actualSurcharges && Object.keys(actualSurcharges).length > 0) {
                 html += `
@@ -1248,120 +1242,25 @@
                 
                 let hasShownAnyItems = false;
                 
-                // 1. EERST: Bereken en toon extra stop charges gebaseerd op Item-surcharge instellingen
-                const extraStopCount = parseInt(step1Data.extraStopCount) || 0;
-                if (extraStopCount > 0) {
-                    // Haal stopover prijs op uit Item-surcharge instellingen
-                    const surchargeItems = JSON.parse(localStorage.getItem('bookingSurchargeItems') || '{}');
-                    let stopoverPricePerStop = 0;
-                    
-                    // Zoek stopover item in fixed items
-                    if (surchargeItems.fixed) {
-                        const stopoverItem = surchargeItems.fixed.find(item => 
-                            item.name.toLowerCase().includes('stopover') ||
-                            item.name.toLowerCase().includes('stop')
-                        );
-                        if (stopoverItem) {
-                            stopoverPricePerStop = parseFloat(stopoverItem.price) || 0;
-                        }
-                    }
-                    
-                    if (stopoverPricePerStop > 0) {
-                        const singleTripStopoverTotal = extraStopCount * stopoverPricePerStop;
-                        const displayPrice = isReturnTrip ? singleTripStopoverTotal * 2 : singleTripStopoverTotal;
-                        const displayText = isReturnTrip ? 
-                            `Stopover (${extraStopCount} stops, heen + terug)` : 
-                            `Stopover (${extraStopCount} stop${extraStopCount > 1 ? 's' : ''})`;
-                        
-                        html += `
-                            <div class="overview-row">
-                                <span class="overview-label">${displayText}</span>
-                                <span class="overview-value">€${displayPrice.toFixed(2)}</span>
-                            </div>
-                        `;
-                        hasShownAnyItems = true;
-                        console.log(`✅ STEP3 - Added stopover: ${extraStopCount} stops × €${stopoverPricePerStop} ${isReturnTrip ? '× 2' : ''} = €${displayPrice}`);
-                    }
-                }
-                
-                // 2. DAARNA: Show handmatige surcharge items from the correct location
+                // Simply display surcharge items as they were selected in step2
                 Object.entries(actualSurcharges).forEach(([key, value]) => {
-                    // Skip all technical/internal fields - ONLY show real user selections
-                    const skipKeys = [
-                        'totalSurcharge', 'surchargeTotal', 'extraStopCount', 
-                        'automaticCharges', 'stopoverCharges', 'airportSurcharge'
-                    ];
-                    
-                    const skipPatterns = [
-                        'stopcount', 'extrastop', 'total', 'automatic', 'airport'
-                    ];
-                    
-                    // Skip if exact key match
-                    if (skipKeys.includes(key)) {
-                        console.log(`⏭️ STEP3 - Skipping technical key: ${key}`);
-                        return; 
-                    }
-                    
-                    // Skip if pattern match
-                    if (skipPatterns.some(pattern => key.toLowerCase().includes(pattern))) {
-                        console.log(`⏭️ STEP3 - Skipping pattern match: ${key}`);
-                        return; 
-                    }
-                    
-                    // Skip if it's a technical field with name containing these terms
-                    if (typeof value === 'object' && value?.name) {
-                        const nameLower = value.name.toLowerCase();
-                        if (nameLower.includes('airport') || 
-                            nameLower.includes('surcharge') || 
-                            nameLower.includes('total') ||
-                            nameLower.includes('stopcount')) {
-                            console.log(`⏭️ STEP3 - Skipping technical item by name: ${value.name}`);
-                            return;
-                        }
-                    }
-                    
-                    console.log(`🔍 Processing surcharge item: ${key}`, value);
+                    // Skip technical fields
+                    if (key === 'totalSurcharge' || key === 'surchargeTotal') return;
                     
                     if (typeof value === 'object' && value !== null && value.name) {
                         const itemPrice = parseFloat(value.price) || 0;
                         const itemQuantity = parseInt(value.quantity) || 1;
-                        let totalItemPrice = itemPrice * itemQuantity;
-                        
-                        // For return trips, double the surcharge prices EXCEPT Meet & Greet
-                        // Meet & Greet is only for pickup FROM airport, not drop-off
-                        if (isReturnTrip && !value.name.toLowerCase().includes('meet') && !value.name.toLowerCase().includes('greet')) {
-                            totalItemPrice = totalItemPrice * 2;
-                        }
-                        
-                        console.log(`💰 Item: ${value.name}, price: ${itemPrice}, quantity: ${itemQuantity}, total: ${totalItemPrice}${isReturnTrip ? ' (doubled for return)' : ''}`);
+                        const totalItemPrice = itemPrice * itemQuantity;
                         
                         if (itemPrice > 0) {
-                            const showReturnLabel = isReturnTrip && !value.name.toLowerCase().includes('meet') && !value.name.toLowerCase().includes('greet');
                             html += `
                                 <div class="overview-row">
-                                    <span class="overview-label">${value.name}${showReturnLabel ? ' (heen + terug)' : ''}</span>
+                                    <span class="overview-label">${value.name}</span>
                                     <span class="overview-value">€${totalItemPrice.toFixed(2)}</span>
                                 </div>
                             `;
                             hasShownAnyItems = true;
                         }
-                    } else if (typeof value === 'number' && value > 0) {
-                        // Handle simple number values
-                        const displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        let simpleItemPrice = parseFloat(value);
-                        
-                        // For return trips, double the surcharge prices
-                        if (isReturnTrip) {
-                            simpleItemPrice = simpleItemPrice * 2;
-                        }
-                        
-                        html += `
-                            <div class="overview-row">
-                                <span class="overview-label">${displayName}${isReturnTrip ? ' (heen + terug)' : ''}</span>
-                                <span class="overview-value">€${simpleItemPrice.toFixed(2)}</span>
-                            </div>
-                        `;
-                        hasShownAnyItems = true;
                     }
                 });
                 
