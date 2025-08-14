@@ -1745,7 +1745,7 @@
             ];
             
             localStorage.setItem('taxiVehicles', JSON.stringify(vehicles));
-            updateStatus('✅ Default voertuigen aangemaakt', '#ffc107');
+            console.log('✅ Default voertuigen aangemaakt');
         }
 
         function createDefaultPricing() {
@@ -1769,7 +1769,7 @@
             };
             
             localStorage.setItem('vehiclePricing', JSON.stringify(pricingData));
-            updateStatus('✅ Default pricing aangemaakt', '#ffc107');
+            console.log('✅ Default pricing aangemaakt');
         }
 
         // Auto-sync pricing updates from admin panel
@@ -4123,16 +4123,7 @@
             document.getElementById('surchargeSection').style.display = 'block';
         }
 
-        // Debug function
-        function debugSurchargeSection() {
-            console.log('🔍 DEBUG: Surcharge section status:');
-            console.log('- Section element:', document.getElementById('surchargeSection'));
-            console.log('- Section display:', document.getElementById('surchargeSection')?.style.display);
-            console.log('- Fixed items container:', document.getElementById('fixedSurchargeItems'));
-            console.log('- Additional items container:', document.getElementById('additionalSurchargeItems'));
-            console.log('- localStorage bookingSurchargeItems:', localStorage.getItem('bookingSurchargeItems'));
-            console.log('- surchargeItems variable:', surchargeItems);
-        }
+        // Removed unused debug function
 
         // 📍 LOCATION SURCHARGE INTEGRATION
         let activeLocationSurcharges = [];
@@ -4266,223 +4257,11 @@
         });
 
         // Polling system to detect changes within same window/tab
-        let lastSettingsCheck = '';
-        let lastVehicleCheck = '';
-        let lastSurchargeCheck = '';
+        // Removed unused checkForAdminChanges function and variables
         
-        function checkForAdminChanges() {
-            const currentSettings = localStorage.getItem('defaultLastMinuteSettings') || '';
-            const currentVehicles = localStorage.getItem('taxiVehicles') || '';
-            const currentSurcharges = localStorage.getItem('surchargeItems') || '';
-            
-            let hasChanges = false;
-            
-            if (currentSettings !== lastSettingsCheck) {
-                console.log('⚡ Last-minute settings changed, refreshing...');
-                lastSettingsCheck = currentSettings;
-                hasChanges = true;
-            }
-            
-            if (currentVehicles !== lastVehicleCheck) {
-                console.log('⚡ Vehicle settings changed, refreshing...');
-                lastVehicleCheck = currentVehicles;
-                hasChanges = true;
-            }
-            
-            if (currentSurcharges !== lastSurchargeCheck) {
-                console.log('⚡ Surcharge settings changed, refreshing...');
-                lastSurchargeCheck = currentSurcharges;
-                hasChanges = true;
-            }
-            
-            if (hasChanges) {
-                // Re-render everything
-                renderVehicles();
-                loadSurchargeItems();
-                checkLastMinuteBooking();
-                updateSurchargeTotal();
-            }
-        }
-        
-        // Check for changes every 2 seconds
-        setInterval(checkForAdminChanges, 2000);
+        // Removed debug setTimeout call
 
-        // Initialize page when loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 Step 2 page loaded, initializing...');
-            
-            // Debug localStorage data
-            console.log('🔍 DEBUG localStorage data:');
-            console.log('   - fromLocation:', localStorage.getItem('fromLocation'));
-            console.log('   - toLocation:', localStorage.getItem('toLocation'));
-            console.log('   - returnActive:', localStorage.getItem('returnActive'));
-            console.log('   - travelDate:', localStorage.getItem('travelDate'));
-            console.log('   - travelHour:', localStorage.getItem('travelHour'));
-            console.log('   - travelMinute:', localStorage.getItem('travelMinute'));
-            console.log('   - defaultLastMinuteSettings:', localStorage.getItem('defaultLastMinuteSettings'));
-            console.log('   - meetAndGreetLocations:', localStorage.getItem('meetAndGreetLocations'));
-            console.log('   - surchargeItems:', localStorage.getItem('surchargeItems'));
-            
-            // Load surcharge items immediately on page load
-            setTimeout(() => {
-                console.log('🔄 Auto-loading surcharge items...');
-                loadSurchargeItems();
-                
-                // Force Meet & Greet check after a delay
-                setTimeout(() => {
-                    console.log('🔄 Force checking Meet & Greet...');
-                    checkAndApplyMeetAndGreet();
-                    
-                    // Force check last-minute booking status
-                    console.log('⚡ Force checking last-minute booking status...');
-                    checkLastMinuteBooking();
-                    
-                    updateSurchargeTotal();
-                }, 1000);
-                
-                // Call debug function
-                setTimeout(debugSurchargeSection, 2000);
-                
-                // Initialize change detection values
-                lastSettingsCheck = localStorage.getItem('defaultLastMinuteSettings') || '';
-                lastVehicleCheck = localStorage.getItem('taxiVehicles') || '';
-                lastSurchargeCheck = localStorage.getItem('surchargeItems') || '';
-            }, 500);
-        });
-
-        // Also call debug function after page load (backup)
-        setTimeout(debugSurchargeSection, 2000);
-
-        // Manual test function for debugging Meet & Greet
-        function testMeetAndGreet() {
-            console.log('🧪 MANUAL TEST: Testing Meet & Greet detection');
-            
-            // Set test data
-            localStorage.setItem('fromLocation', 'Brussels Airport');
-            localStorage.setItem('toLocation', 'Antwerp Central');
-            localStorage.setItem('returnActive', 'false');
-            
-            console.log('✅ Test data set:');
-            console.log('   - fromLocation: Brussels Airport');
-            console.log('   - toLocation: Antwerp Central');
-            console.log('   - returnActive: false');
-            
-            // Clear previous selections but keep location surcharges
-            const currentSurcharges = selectedSurcharges;
-            selectedSurcharges = {};
-            // Restore location surcharges
-            for (const key in currentSurcharges) {
-                if (currentSurcharges[key].isLocationSurcharge) {
-                    selectedSurcharges[key] = currentSurcharges[key];
-                }
-            }
-            localStorage.setItem('selectedSurcharges', JSON.stringify(selectedSurcharges));
-            
-            // Re-run Meet & Greet detection
-            checkAndApplyMeetAndGreet();
-            updateSurchargeTotal();
-            renderSurchargeItems();
-            
-            console.log('🔍 Results:');
-            console.log('   - selectedSurcharges:', selectedSurcharges);
-            console.log('   - surchargeTotal:', surchargeTotal);
-            
-            // Show a visible alert
-            alert(`Meet & Greet Test Results:
-- selectedSurcharges: ${Object.keys(selectedSurcharges).length} items
-- surchargeTotal: €${surchargeTotal}
-- Meet & Greet found: ${selectedSurcharges['meet-greet'] ? 'YES' : 'NO'}`);
-        }
-
-        // Manual test function for return trip
-        function testMeetAndGreetReturn() {
-            console.log('🧪 MANUAL TEST: Testing Meet & Greet detection for RETURN trip');
-            
-            // Set test data - return trip where pickup is from airport
-            localStorage.setItem('fromLocation', 'Brussels Central');
-            localStorage.setItem('toLocation', 'Brussels Airport');
-            localStorage.setItem('returnActive', 'true');
-            
-            console.log('✅ Test data set:');
-            console.log('   - fromLocation: Brussels Central (NO Meet & Greet)');
-            console.log('   - toLocation: Brussels Airport (WILL need Meet & Greet for RETURN pickup)');
-            console.log('   - returnActive: true');
-            
-            // Clear previous selections but keep location surcharges
-            const currentSurcharges = selectedSurcharges;
-            selectedSurcharges = {};
-            // Restore location surcharges
-            for (const key in currentSurcharges) {
-                if (currentSurcharges[key].isLocationSurcharge) {
-                    selectedSurcharges[key] = currentSurcharges[key];
-                }
-            }
-            localStorage.setItem('selectedSurcharges', JSON.stringify(selectedSurcharges));
-            
-            // Re-run Meet & Greet detection
-            checkAndApplyMeetAndGreet();
-            updateSurchargeTotal();
-            renderSurchargeItems();
-            
-            console.log('🔍 Results:');
-            console.log('   - selectedSurcharges:', selectedSurcharges);
-            console.log('   - surchargeTotal:', surchargeTotal);
-            
-            // Show a visible alert
-            alert(`Meet & Greet Return Test Results:
-- Outbound: Brussels Central → NO Meet & Greet
-- Return: Brussels Airport pickup → SHOULD have Meet & Greet
-- Meet & Greet found: ${selectedSurcharges['meet-greet'] ? 'YES' : 'NO'}
-- Total surcharge: €${surchargeTotal}`);
-        }
-
-        // Test function for when going TO airport (should NOT have Meet & Greet)
-        function testGoingToAirport() {
-            console.log('🧪 MANUAL TEST: Testing going TO airport (should NOT have Meet & Greet)');
-            
-            // Set test data - going TO airport
-            localStorage.setItem('fromLocation', 'Brussels Central');
-            localStorage.setItem('toLocation', 'Brussels Airport');
-            localStorage.setItem('returnActive', 'false');
-            
-            console.log('✅ Test data set:');
-            console.log('   - fromLocation: Brussels Central');
-            console.log('   - toLocation: Brussels Airport (going TO airport)');
-            console.log('   - returnActive: false');
-            
-            // Clear previous selections but keep location surcharges
-            const currentSurcharges = selectedSurcharges;
-            selectedSurcharges = {};
-            // Restore location surcharges
-            for (const key in currentSurcharges) {
-                if (currentSurcharges[key].isLocationSurcharge) {
-                    selectedSurcharges[key] = currentSurcharges[key];
-                }
-            }
-            localStorage.setItem('selectedSurcharges', JSON.stringify(selectedSurcharges));
-            
-            // Re-run Meet & Greet detection and re-render
-            checkAndApplyMeetAndGreet();
-            updateSurchargeTotal();
-            renderSurchargeItems();
-            
-            console.log('🔍 Results:');
-            console.log('   - selectedSurcharges:', selectedSurcharges);
-            console.log('   - surchargeTotal:', surchargeTotal);
-            
-            // Check if Meet & Greet checkbox exists in DOM
-            const meetGreetCheckbox = document.getElementById('surcharge_meet-greet');
-            const checkboxExists = meetGreetCheckbox !== null;
-            
-            // Show a visible alert
-            alert(`Going TO Airport Test Results:
-- From: Brussels Central (not airport)
-- To: Brussels Airport (going TO airport)
-- Meet & Greet checkbox should NOT appear
-- Meet & Greet checkbox exists: ${checkboxExists ? 'YES (ERROR!)' : 'NO (CORRECT!)'}
-- Meet & Greet selected: ${selectedSurcharges['meet-greet'] ? 'YES (ERROR!)' : 'NO (CORRECT!)'}
-- Total surcharge: €${surchargeTotal}`);
-        }
+        // Removed unused test functions: testMeetAndGreet, testMeetAndGreetReturn, testGoingToAirport
 
         // Last-Minute Booking Functions
         function checkLastMinuteBooking() {
@@ -4863,42 +4642,8 @@
             }
         }
 
-        // Make test functions globally available
-        window.testMeetAndGreet = testMeetAndGreet;
-        window.testMeetAndGreetReturn = testMeetAndGreetReturn;
-        window.testGoingToAirport = testGoingToAirport;
+        // Make essential functions globally available for debugging
         window.checkLastMinuteBooking = checkLastMinuteBooking;
-        
-        // Test function for last-minute pricing
-        window.testLastMinutePricing = function() {
-            console.log('🧪 TESTING last-minute pricing...');
-            
-            // Set test travel time (2 hours from now)
-            const now = new Date();
-            const travelTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // +2 hours
-            
-            const dateStr = `${travelTime.getDate().toString().padStart(2, '0')}/${(travelTime.getMonth() + 1).toString().padStart(2, '0')}/${travelTime.getFullYear()}`;
-            const hour = travelTime.getHours().toString();
-            const minute = travelTime.getMinutes().toString();
-            
-            localStorage.setItem('travelDate', dateStr);
-            localStorage.setItem('travelHour', hour);
-            localStorage.setItem('travelMinute', minute);
-            
-            // DISABLED: No longer force hardcoded surcharge settings
-            // Respect whatever admin has configured in the admin panel
-            console.log('⚡ Test function disabled - respecting admin settings');
-            
-            console.log('✅ Test data set:', { dateStr, hour, minute, settings });
-            
-            // Re-render vehicles
-            renderVehicles();
-            
-            // Check if working
-            checkLastMinuteBooking();
-            
-            console.log('🔍 Check vehicle cards for crossed-out prices!');
-        };
         // Update only vehicle prices without clearing the entire display
         function updateVehiclePricesOnly() {
             try {

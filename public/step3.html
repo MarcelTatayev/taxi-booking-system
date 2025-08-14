@@ -920,18 +920,13 @@
 
         async function showBookingOverview() {
             // Debug localStorage first
-            console.log('🔍 DEBUG ALL LOCALSTORAGE DATA:');
-            console.log('selectedVehicleStep2 RAW:', localStorage.getItem('selectedVehicleStep2'));
-            console.log('selectedSurcharges RAW:', localStorage.getItem('selectedSurcharges'));
-            
-            // Parse and debug
+            console.log('🔍 Showing booking overview...');
+            // Parse localStorage data
             try {
                 const step2DataRaw = JSON.parse(localStorage.getItem('selectedVehicleStep2') || '{}');
                 const surchargeDataRaw = JSON.parse(localStorage.getItem('selectedSurcharges') || '{}');
-                console.log('🔍 PARSED step2Data:', step2DataRaw);
-                console.log('🔍 PARSED surchargeData:', surchargeDataRaw);
-                console.log('🔍 surchargeData KEYS:', Object.keys(surchargeDataRaw));
-                console.log('🔍 surchargeData VALUES:', Object.values(surchargeDataRaw));
+                console.log('🔍 Step2 data loaded:', !!step2DataRaw);
+                console.log('🔍 Surcharge data loaded:', Object.keys(surchargeDataRaw).length, 'items');
             } catch (e) {
                 console.error('❌ Failed to parse localStorage data:', e);
             }
@@ -1006,15 +1001,7 @@
             const passengerDetails = JSON.parse(localStorage.getItem('passengerDetails') || '{}');
             
             // 🔍 DEBUG: Log all data to console
-            console.log('🔍 OVERVIEW DEBUG - Step1 Data:', step1Data);
-            console.log('🔍 OVERVIEW DEBUG - Step2 Data:', step2Data);
-            console.log('🔍 OVERVIEW DEBUG - Surcharge Data:', surchargeData);
-            console.log('🔍 OVERVIEW DEBUG - Passenger Details:', passengerDetails);
-            console.log('🔍 EXTRA STOPS DEBUG:', step1Data.extraStops);
-            console.log('🔍 EXTRA STOPS LENGTH:', step1Data.extraStops ? step1Data.extraStops.length : 'NO ARRAY');
-            console.log('🔍 EXTRA STOP COUNT:', step1Data.extraStopCount);
-            console.log('🔍 RAW EXTRA STOPS FROM LOCALSTORAGE:', localStorage.getItem('extraStops'));
-            console.log('🔍 RAW EXTRA STOP COUNT FROM LOCALSTORAGE:', localStorage.getItem('extraStopCount'));
+            console.log('🔍 Building booking overview with extra stops:', step1Data.extraStopCount || 0);
             
             const customerData = {
                 firstName: document.getElementById('firstName').value,
@@ -1547,14 +1534,7 @@
             body.innerHTML = html;
         }
 
-        function getPaymentMethodName(method) {
-            switch (method) {
-                case 'cash': return '💵 Cash';
-                case 'card': return '💳 Credit card';
-                case 'paypal': return '🅿️ PayPal';
-                default: return method;
-            }
-        }
+        // Removed duplicate getPaymentMethodName function (already defined at line 634)
 
         async function confirmFinalBooking() {
             const paymentMethod = localStorage.getItem('selectedPaymentMethod') || 'cash';
@@ -1854,10 +1834,7 @@
             
             // 🆕 Load surcharge data including Meet & Greet locations for email
             const surchargeData = JSON.parse(localStorage.getItem('selectedSurcharges') || '{}');
-            console.log('📧 CRITICAL DEBUG - Loaded surcharge data for email:', surchargeData);
-            console.log('📧 CRITICAL DEBUG - localStorage selectedSurcharges RAW:', localStorage.getItem('selectedSurcharges'));
-            console.log('📧 CRITICAL DEBUG - Object.keys(surchargeData):', Object.keys(surchargeData));
-            console.log('📧 CRITICAL DEBUG - Object.values(surchargeData):', Object.values(surchargeData));
+            console.log('📧 Preparing booking confirmation email with surcharges:', Object.keys(surchargeData).length, 'items');
 
             // Generate shared base code for heen/terug trips
             const isReturnTrip = step1Data.returnActive === 'true';
@@ -2229,64 +2206,8 @@ Voertuig: ${returnVehicle?.vehicle?.name || 'Niet gespecificeerd'}`;
             }
         }
 
-        // 🔍 SIMPLE TEST FUNCTION
-        window.testOverview = function() {
-            console.log('=== OVERZICHT TEST ===');
-            
-            const step2Data = JSON.parse(localStorage.getItem('selectedVehicleStep2') || '{}');
-            const surchargeData = JSON.parse(localStorage.getItem('selectedSurcharges') || '{}');
-            
-            console.log('STAP 2 Data:', step2Data);
-            console.log('Surcharge Data:', surchargeData);
-            
-            // Test what should appear in overview
-            const vehicleName = step2Data?.outbound?.vehicle?.name || 'Onbekend';
-            const basePrice = step2Data?.outbound?.pricing?.minimumPrice || 50;
-            const surchargeTotal = surchargeData?.surchargeTotal || 0;
-            
-            // Use the correct final price from step2 (includes last-minute surcharge)
-            const step2FinalPrice = parseFloat(localStorage.getItem('step2FinalTotalPrice') || '0');
-            const finalTotal = step2FinalPrice > 0 ? step2FinalPrice : basePrice + surchargeTotal;
-            
-            console.log('OVERZICHT MOET TONEN:');
-            console.log(`Vehicle: ${vehicleName}`);
-            console.log(`Basis prijs: €${basePrice}`);
-            console.log(`Surcharge totaal: €${surchargeTotal}`);
-            console.log(`Step2 final price (incl. last-minute): €${step2FinalPrice}`);
-            console.log(`EINDTOTAAL: €${finalTotal}`);
-            
-            // Test surcharge items
-            const selectedSurcharges = surchargeData?.selectedSurcharges || {};
-            console.log('EXTRA OPTIES:');
-            Object.entries(selectedSurcharges).forEach(([key, value]) => {
-                if (key !== 'totalSurcharge' && value?.name && value?.price > 0) {
-                    console.log(`  ${value.name}: €${value.price}`);
-                }
-            });
-        };
-        // Emergency fallback: Define driver functions globally to prevent errors
-        function showAddDriverModal() {
-            alert('Deze functie is alleen beschikbaar in het admin panel');
-        }
-        function refreshDriversList() {
-            console.log('refreshDriversList called from step3 - redirecting to admin');
-        }
-        function editDriver() {
-            alert('Deze functie is alleen beschikbaar in het admin panel');
-        }
-        function deleteDriver() {
-            alert('Deze functie is alleen beschikbaar in het admin panel');
-        }
-        function searchDrivers() {
-            console.log('searchDrivers called from step3');
-        }
-        
-        // Make them global
-        window.showAddDriverModal = showAddDriverModal;
-        window.refreshDriversList = refreshDriversList;
-        window.editDriver = editDriver;
-        window.deleteDriver = deleteDriver;
-        window.searchDrivers = searchDrivers;
+        // Removed unused test function
+        // Removed unnecessary emergency fallback driver functions
     </script>
 </body>
 </html>

@@ -301,9 +301,6 @@
                 <p style="opacity: 0.8; margin: 0;">System Configuration & Email Templates</p>
             </div>
             <div style="display: flex; gap: 15px; align-items: center;">
-                <button onclick="window.location.href='admin-simple.html'" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-                    ← Back to Admin
-                </button>
             </div>
         </div>
 
@@ -313,7 +310,10 @@
                 <h3 style="color: #495057; margin-bottom: 15px;">Settings</h3>
             </div>
 
-            <div class="nav-item">
+            <!-- <div class="nav-item">
+                <a class="nav-link" onclick="showSection('vehicle-manager')">🚗 Vehicle Manager</a>
+            </div> -->
+            <!-- <div class="nav-item">
                 <a class="nav-link" onclick="showSection('email-templates')">📧 Email Templates</a>
             </div>
             <div class="nav-item">
@@ -336,14 +336,15 @@
             </div>
             <div class="nav-item">
                 <a class="nav-link" onclick="showSection('system-defaults')">🔧 System Defaults</a>
-            </div>
+            </div> -->
         </div>
 
         <!-- Main Content -->
         <div class="admin-main">
             <div id="notification" class="notification"></div>
 
-            <!-- Email Templates Section -->
+            <!-- ALL SECTIONS DISABLED
+            Email Templates Section 
             <div id="email-templates-section" class="content-section active">
                 <h2>📧 Email Templates</h2>
                 <p>Configure email templates for customer communications</p>
@@ -1041,6 +1042,7 @@ Marcel's Taxi Team</textarea>
                 loadAllSettings();
             }
         });
+        END ALL SECTIONS DISABLED -->
     </script>
 </body>
 </html>
