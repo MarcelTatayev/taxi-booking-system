@@ -3090,20 +3090,20 @@
                     console.log('📄 No surcharge items found, creating default ones...');
                     const defaultSurchargeItems = {
                         fixed: [
-                            { id: 'meet-greet', name: 'Meet and greet', price: 5, enabled: true },
-                            { id: 'child-seat', name: 'Child seat', price: 3, enabled: true, hasDropdown: true, dropdownOptions: [{ id: 'maxi_cosi', name: 'Maxi Cosi (baby can\'t sit)', price: 3 }, { id: 'baby_seat', name: 'Baby seat', price: 3 }, { id: 'verhoostoel', name: 'Verhoostoel', price: 3 }] },
-                            { id: 'dog', name: 'Dog', price: 3, enabled: true, hasDropdown: true, dropdownOptions: [{ id: 'kleine_hond', name: 'Kleine hond', price: 3 }, { id: 'groten_hond', name: 'Groten hond', price: 3 }] },
+                            { id: 'meet-greet', name: 'Meet and greet', price: 5.00, enabled: true },
+                            { id: 'child-seat', name: 'Child seat', price: 6.00, enabled: true, hasDropdown: true, dropdownOptions: [{ id: 'maxi_cosi', name: 'Maxi Cosi (baby can\'t sit)', price: 6.00 }, { id: 'baby_seat', name: 'Baby seat', price: 6.00 }, { id: 'verhoostoel', name: 'Verhoostoel', price: 6.00 }] },
+                            { id: 'dog', name: 'Dog', price: 5.00, enabled: true, hasDropdown: true, dropdownOptions: [{ id: 'kleine_hond', name: 'Kleine hond', price: 5.00 }, { id: 'groten_hond', name: 'Groten hond', price: 5.00 }] },
                             { id: 'wheelchair', name: 'Wheelchair', price: 0, enabled: true },
                             { id: 'waiting-time', name: 'Waiting time after landing', price: 0, enabled: true },
                             { id: 'stopover', name: 'Stopover (Via)', price: 10, enabled: true }
                         ],
                         additional: [
-                            { id: 'golf-material', name: 'Golf-material', price: 5, type: 'Amount', quantity: 1 },
-                            { id: 'ski-material', name: 'Ski-material', price: 5, type: 'Amount', quantity: 1 },
+                            { id: 'golf-material', name: 'Golf-material', price: 8.00, type: 'Amount', quantity: 1 },
+                            { id: 'ski-material', name: 'Ski-material', price: 10.00, type: 'Amount', quantity: 1 },
                             { id: 'water', name: 'Water', price: 2, type: 'Amount', quantity: 1, hasDropdown: true },
                             { id: 'newspaper', name: 'Newspaper', price: 0, type: 'Amount', quantity: 1, hasDropdown: true },
                             { id: 'oversize-luggage', name: 'Oversize luggage', price: 0, type: 'Amount', quantity: 1 },
-                            { id: 'extra-waiting', name: 'Extra waiting time (1 hour)', price: 30, type: 'Amount', quantity: 1 }
+                            { id: 'extra-waiting', name: 'Extra waiting time (1 hour)', price: 15.00, type: 'Amount', quantity: 1 }
                         ]
                     };
                     
@@ -3119,8 +3119,8 @@
             
             console.log('📄 Loaded surcharge items:', surchargeItems);
             
-            // 🆕 Check for automatic Meet & Greet based on pickup location BEFORE rendering
-            checkAndApplyMeetAndGreet();
+            // 🆕 Simple airport check - auto add Meet & Greet if from airport
+            checkAirportMeetGreet();
             
             // Render after Meet & Greet check
             renderSurchargeItems();
@@ -3128,8 +3128,108 @@
             document.getElementById('surchargeSection').style.display = 'block';
         }
 
-        // Function to check ONLY pickup locations for Meet & Greet (not destinations)
-        function checkAndApplyMeetAndGreet() {
+        // Function to check if pickup location needs Meet & Greet based on admin settings
+        function checkAirportMeetGreet() {
+            const fromLocation = localStorage.getItem('fromLocation') || '';
+            const toLocation = localStorage.getItem('toLocation') || '';
+            const hasReturnTrip = localStorage.getItem('returnActive') === 'true';
+            
+            console.log('🔍 Checking Meet & Greet requirements:');
+            console.log('   - Van:', fromLocation);
+            console.log('   - Naar:', toLocation);
+            console.log('   - Retour:', hasReturnTrip);
+            
+            // Get Meet & Greet locations from admin
+            const meetGreetLocations = JSON.parse(localStorage.getItem('meetAndGreetLocations') || '{}');
+            const allLocations = [
+                ...(meetGreetLocations.airports || []),
+                ...(meetGreetLocations.stations || []),
+                ...(meetGreetLocations.hotels || [])
+            ];
+            
+            console.log('📍 Available Meet & Greet locations:', allLocations);
+            
+            let meetGreetNeeded = false;
+            let meetGreetReason = '';
+            let matchedLocations = [];
+            
+            // Function to check if a location matches any Meet & Greet location
+            function checkLocationMatch(locationText) {
+                const locText = locationText.toLowerCase();
+                
+                for (const location of allLocations) {
+                    if (!location.enabled || !location.meetGreetEnabled) continue;
+                    
+                    // Check multiple fields for matches
+                    const checkFields = [
+                        location.name?.toLowerCase(),
+                        location.fullName?.toLowerCase(), 
+                        location.address?.toLowerCase(),
+                        location.code?.toLowerCase()
+                    ].filter(Boolean);
+                    
+                    for (const field of checkFields) {
+                        if (locText.includes(field) || field.includes(locText)) {
+                            console.log(`✅ Match found: "${locationText}" matches "${location.name}"`);
+                            return location;
+                        }
+                    }
+                }
+                return null;
+            }
+            
+            // HEEN RIT: Check if pickup FROM location needs Meet & Greet
+            const fromMatch = checkLocationMatch(fromLocation);
+            if (fromMatch) {
+                meetGreetNeeded = true;
+                meetGreetReason = `Heen rit - ophalen van ${fromMatch.name}`;
+                matchedLocations.push(fromMatch);
+                console.log('✈️ Meet & Greet nodig:', meetGreetReason);
+            }
+            
+            // RETOUR RIT: Check if return pickup (TO location) needs Meet & Greet
+            if (hasReturnTrip) {
+                const toMatch = checkLocationMatch(toLocation);
+                if (toMatch) {
+                    meetGreetNeeded = true;
+                    meetGreetReason += (meetGreetReason ? ' + ' : '') + `Retour rit - ophalen van ${toMatch.name}`;
+                    if (!matchedLocations.find(loc => loc.id === toMatch.id)) {
+                        matchedLocations.push(toMatch);
+                    }
+                    console.log('✈️ Meet & Greet nodig voor retour:', toMatch.name);
+                }
+            }
+            
+            if (meetGreetNeeded) {
+                console.log('✅ Auto-adding Meet & Greet:', meetGreetReason);
+                
+                // Auto-add Meet & Greet to selectedSurcharges
+                selectedSurcharges['meet-greet'] = {
+                    name: 'Meet & greet',
+                    price: 5.00,
+                    quantity: 1,
+                    automatic: true,
+                    reason: meetGreetReason,
+                    locations: matchedLocations
+                };
+                
+                // Save to localStorage
+                localStorage.setItem('selectedSurcharges', JSON.stringify(selectedSurcharges));
+                console.log('✅ Meet & Greet automatically added:', meetGreetReason);
+            } else {
+                console.log('ℹ️ Geen Meet & Greet nodig - geen ophaling van geregistreerde locaties');
+                
+                // Remove automatic Meet & Greet if it was previously added
+                if (selectedSurcharges['meet-greet'] && selectedSurcharges['meet-greet'].automatic) {
+                    delete selectedSurcharges['meet-greet'];
+                    localStorage.setItem('selectedSurcharges', JSON.stringify(selectedSurcharges));
+                    console.log('🗑️ Automatic Meet & Greet removed');
+                }
+            }
+        }
+
+        // OLD COMPLEX FUNCTION - keeping for reference but not used
+        function checkAndApplyMeetAndGreet_OLD() {
             const fromLocation = localStorage.getItem('fromLocation') || '';
             const toLocation = localStorage.getItem('toLocation') || '';
             const hasReturnTrip = localStorage.getItem('returnActive') === 'true';
@@ -3360,48 +3460,7 @@
                         return;
                     }
                     
-                    // Handle Meet and greet - only show if actually needed AND enabled
-                    if (item.id === 'meet-greet') {
-                        console.log('🤝 Meet & Greet item found - checking if should be shown...');
-                        
-                        // First check if Meet & Greet is enabled in admin settings
-                        if (item.enabled === false) {
-                            console.log('❌ Meet & Greet DISABLED in admin settings - hiding checkbox completely');
-                            return; // Skip rendering this item
-                        }
-                        
-                        // Check if Meet & Greet is required for current locations
-                        const fromLocation = localStorage.getItem('fromLocation') || '';
-                        const toLocation = localStorage.getItem('toLocation') || '';
-                        const hasReturnTrip = localStorage.getItem('returnActive') === 'true';
-                        
-                        let shouldShow = false;
-                        
-                        // Check outbound pickup location
-                        if (fromLocation) {
-                            const pickupCheck = checkMeetAndGreetRequired(fromLocation);
-                            if (pickupCheck.required) {
-                                shouldShow = true;
-                                console.log('✅ Meet & Greet required for outbound pickup:', fromLocation);
-                            }
-                        }
-                        
-                        // Check return pickup location
-                        if (hasReturnTrip && toLocation) {
-                            const returnPickupCheck = checkMeetAndGreetRequired(toLocation);
-                            if (returnPickupCheck.required) {
-                                shouldShow = true;
-                                console.log('✅ Meet & Greet required for return pickup:', toLocation);
-                            }
-                        }
-                        
-                        if (!shouldShow) {
-                            console.log('❌ Meet & Greet NOT required - hiding checkbox completely');
-                            return; // Skip rendering this item
-                        }
-                        
-                        console.log('✅ Meet & Greet IS required AND enabled - showing checkbox');
-                    }
+                    // Simple Meet & Greet - always show checkbox
                     
                     // Hide items with €0.00 price OR disabled items
                     if (item.price === 0 || item.enabled === false) {
