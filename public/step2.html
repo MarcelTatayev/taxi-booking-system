@@ -3460,7 +3460,10 @@
                         return;
                     }
                     
-                    // Simple Meet & Greet - always show checkbox
+                    // Meet & Greet - alleen tonen als automatisch toegevoegd
+                    if (item.id === 'meet-greet') {
+                        return; // Altijd verbergen - wordt automatisch getoond als nodig
+                    }
                     
                     // Hide items with €0.00 price OR disabled items
                     if (item.price === 0 || item.enabled === false) {

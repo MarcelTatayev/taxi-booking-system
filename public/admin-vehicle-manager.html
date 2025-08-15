@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚗 Vehicle Manager - Marcel's Taxi Admin</title>
+    <link rel="stylesheet" href="css/vehicle-manager.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Vehicle Manager</h1>
+            <p>Professioneel voertuig beheer systeem - Verbonden met Step2 Booking</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="actions-bar">
+                <a href="admin-drivers.html" class="back-link">← Terug naar Admin Panel</a>
+                <div>
+                    <button class="btn btn-success" onclick="syncToStep2()">🔄 Sync to Step2</button>
+                    <button class="btn" onclick="openAddVehicleModal()">➕ Add New Vehicle</button>
+                </div>
+            </div>
+            
+            <div class="sync-status" id="syncStatus">
+                ✅ Vehicle data synchronized with Step2 booking system
+            </div>
+            
+            <div class="vehicles-grid" id="vehiclesGrid">
+                <!-- Vehicles will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Vehicle Modal -->
+    <div id="vehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Vehicle</h3>
+                <button class="close-btn" onclick="closeVehicleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="vehicleForm">
+                    <div class="form-group">
+                        <label class="form-label">Vehicle Name *</label>
+                        <input type="text" id="vehicleName" class="form-control" placeholder="e.g. Premium Saloon" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" id="vehicleDescription" class="form-control" placeholder="e.g. Luxury sedan for business travel">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Passenger Capacity *</label>
+                        <select id="vehicleCapacity" class="form-control" required>
+                            <option value="">Select capacity</option>
+                            <option value="4">4 passengers</option>
+                            <option value="5">5 passengers</option>
+                            <option value="6">6 passengers</option>
+                            <option value="7">7 passengers</option>
+                            <option value="8">8 passengers</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Hourly Rate (€) *</label>
+                        <input type="number" id="vehicleRate" class="form-control" placeholder="e.g. 55" min="0" step="0.01" required>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-top: 30px;">
+                        <button type="submit" class="btn btn-success" style="flex: 1;">Save Vehicle</button>
+                        <button type="button" class="btn" onclick="closeVehicleModal()" style="flex: 1;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/vehicle-manager.js"></script>
+</body>
+</html>
