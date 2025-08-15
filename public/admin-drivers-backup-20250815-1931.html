@@ -7727,6 +7727,32 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
         }
 
         // Retour Functions
+        function toggleDispatchRetour() {
+            dispatchRetourActive = !dispatchRetourActive;
+            const details = document.getElementById('dispatchRetourDetails');
+            const status = document.getElementById('dispatchRetourStatus');
+            const btn = document.getElementById('dispatchRetourBtn');
+            
+            if (dispatchRetourActive) {
+                details.style.display = 'block';
+                status.textContent = 'Activated ✅';
+                status.style.color = '#28a745';
+                btn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            } else {
+                details.style.display = 'none';
+                status.textContent = 'Not activated';
+                status.style.color = '#666';
+                btn.style.background = 'linear-gradient(135deg, #2196f3, #1976d2)';
+                
+                // Clear return values
+                document.getElementById('dispatchReturnDate').value = '';
+                document.getElementById('dispatchReturnHour').value = '';
+                document.getElementById('dispatchReturnMinute').value = '';
+                dispatchReturnSelectedDate = null;
+            }
+            
+            console.log('Retour toggled:', dispatchRetourActive);
+        }
 
         function toggleDispatchCalendar() {
             const calendar = document.getElementById('dispatchCalendar');
@@ -7993,7 +8019,9 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
             }
         }
 
-        // 🔄 RETURN JOURNEY VARIABLES (already declared above)
+        // 🔄 RETURN JOURNEY VARIABLES
+        let dispatchReturnCurrentDate = new Date();
+        let dispatchReturnSelectedDate = null;
 
         // 🔄 RETURN JOURNEY FUNCTIONS
         function toggleDispatchRetour() {

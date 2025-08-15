@@ -2944,34 +2944,111 @@
         let surchargeTotal = 0;
         let lastSurchargeUpdateTime = 0;
 
-        // Simple Meet & Greet check function
-        function checkSimpleMeetAndGreet(location) {
-            if (!location) return { required: false };
+        // Meet and Greet Location Management (same as admin)
+        let meetAndGreetLocations = {
+            airports: [
+                {
+                    id: 'brussels-airport',
+                    name: 'Brussels Airport (BRU)',
+                    fullName: 'Brussels Airport',
+                    code: 'BRU',
+                    address: 'A201, 1930 Zaventem, Belgium',
+                    enabled: true,
+                    meetGreetEnabled: true,
+                    pickupInstructions: 'Onze chauffeur wacht op u in de aankomsthal met een naambord. Locatie: bij de informatiebalie.'
+                },
+                {
+                    id: 'charleroi-airport',
+                    name: 'Brussels South Charleroi Airport (CRL)',
+                    fullName: 'Brussels South Charleroi Airport',
+                    code: 'CRL',
+                    address: 'Rue des Frères Wright 8, 6041 Charleroi, Belgium',
+                    enabled: true,
+                    meetGreetEnabled: true,
+                    pickupInstructions: 'Meet & Greet service beschikbaar in de aankomsthal. Onze chauffeur wacht bij de uitgang.'
+                }
+            ],
+            stations: [
+                {
+                    id: 'brussels-central',
+                    name: 'Brussels Central Station',
+                    fullName: 'Gare Centrale / Centraal Station',
+                    address: 'Carrefour de l\'Europe 2, 1000 Brussels, Belgium',
+                    enabled: true,
+                    meetGreetEnabled: true,
+                    pickupInstructions: 'Onze chauffeur wacht bij de hoofdingang van het station.'
+                }
+            ],
+            hotels: [
+                {
+                    id: 'hilton-brussels',
+                    name: 'Hilton Brussels City',
+                    fullName: 'Hilton Brussels City Hotel',
+                    address: 'Place Eugène Flagey 20, 1050 Brussels, Belgium',
+                    enabled: true,
+                    meetGreetEnabled: true,
+                    pickupInstructions: 'Onze chauffeur wacht in de lobby van het hotel.'
+                }
+            ]
+        };
+
+        // Function to check if a location requires Meet & Greet
+        function checkMeetAndGreetRequired(fromLocation) {
+            const allLocations = [
+                ...meetAndGreetLocations.airports,
+                ...meetAndGreetLocations.stations,
+                ...meetAndGreetLocations.hotels
+            ];
             
-            const loc = location.toLowerCase();
+            console.log(`🔍 Checking "${fromLocation}" against ${allLocations.length} configured locations...`);
             
-            // Check for airports
-            if (loc.includes('airport') || loc.includes('zaventem') || loc.includes('charleroi') || 
-                loc.includes('bru') || loc.includes('crl')) {
-                return { 
-                    required: true, 
-                    location: { name: location },
-                    instructions: 'Meet & Greet service at airport pickup'
-                };
-            }
-            
-            // Check for train stations
-            if (loc.includes('station') || loc.includes('central') || loc.includes('gare')) {
-                return { 
-                    required: true, 
-                    location: { name: location },
-                    instructions: 'Meet & Greet service at station pickup'
-                };
+            // Check if the pickup location matches any registered Meet & Greet location
+            for (const location of allLocations) {
+                console.log(`🔍 Checking location: ${location.name} (enabled: ${location.enabled}, meetGreetEnabled: ${location.meetGreetEnabled})`);
+                if (!location.enabled || !location.meetGreetEnabled) {
+                    console.log(`   ❌ Skipped - not enabled or Meet & Greet disabled`);
+                    continue;
+                }
+                
+                // Enhanced text matching - support for partial matches and common variations
+                const locationNames = [
+                    location.name.toLowerCase(),
+                    location.fullName.toLowerCase(),
+                    location.code?.toLowerCase(),
+                    location.address?.toLowerCase()
+                ].filter(Boolean);
+                
+                const fromLoc = fromLocation.toLowerCase();
+                
+                for (const locName of locationNames) {
+                    // Direct contains match (both ways)
+                    if (fromLoc.includes(locName) || locName.includes(fromLoc)) {
+                        console.log(`✅ Meet & Greet match found: "${fromLocation}" matches "${location.name}"`);
+                        return {
+                            required: true,
+                            location: location,
+                            instructions: location.pickupInstructions
+                        };
+                    }
+                    
+                    // Special handling for common airport name variations
+                    if (location.code && (
+                        fromLoc.includes('brussels airport') && location.code.toLowerCase() === 'bru' ||
+                        fromLoc.includes('zaventem') && location.code.toLowerCase() === 'bru' ||
+                        fromLoc.includes('charleroi') && location.code.toLowerCase() === 'crl'
+                    )) {
+                        console.log(`✅ Meet & Greet airport match found: "${fromLocation}" matches airport code ${location.code}`);
+                        return {
+                            required: true,
+                            location: location,
+                            instructions: location.pickupInstructions
+                        };
+                    }
+                }
             }
             
             return { required: false };
         }
-
 
         function loadSurchargeItems() {
             // Load selected surcharges first
@@ -2980,14 +3057,16 @@
                 selectedSurcharges = JSON.parse(savedSurcharges);
             }
             
-            // Load Meet & Greet locations from admin localStorage  
-            let meetAndGreetLocations = {};
+            // Load Meet & Greet locations from admin localStorage
             const savedLocations = localStorage.getItem('meetAndGreetLocations');
             if (savedLocations) {
                 meetAndGreetLocations = JSON.parse(savedLocations);
                 console.log('✅ Loaded Meet & Greet locations from localStorage:', meetAndGreetLocations);
             } else {
-                console.log('⚠️ No Meet & Greet locations found in localStorage');
+                console.log('⚠️ No Meet & Greet locations found in localStorage, using defaults');
+                // Save default locations to localStorage for first time use
+                localStorage.setItem('meetAndGreetLocations', JSON.stringify(meetAndGreetLocations));
+                console.log('💾 Saved default Meet & Greet locations to localStorage');
             }
             
             // First try to load from admin localStorage (primary source)
@@ -3011,7 +3090,7 @@
                     console.log('📄 No surcharge items found, creating default ones...');
                     const defaultSurchargeItems = {
                         fixed: [
-                            { id: 'meet-greet', name: 'Meet and greet', price: 0, enabled: true },
+                            { id: 'meet-greet', name: 'Meet and greet', price: 5, enabled: true },
                             { id: 'child-seat', name: 'Child seat', price: 3, enabled: true, hasDropdown: true, dropdownOptions: [{ id: 'maxi_cosi', name: 'Maxi Cosi (baby can\'t sit)', price: 0 }, { id: 'baby_seat', name: 'Baby seat', price: 0 }, { id: 'verhoostoel', name: 'Verhoostoel', price: 0 }] },
                             { id: 'dog', name: 'Dog', price: 3, enabled: true, hasDropdown: true, dropdownOptions: [{ id: 'kleine_hond', name: 'Kleine hond', price: 0 }, { id: 'groten_hond', name: 'Groten hond', price: 0 }] },
                             { id: 'wheelchair', name: 'Wheelchair', price: 0, enabled: true },
@@ -3059,8 +3138,6 @@
             console.log('   - fromLocation:', fromLocation);
             console.log('   - toLocation:', toLocation);
             console.log('   - hasReturnTrip:', hasReturnTrip);
-            // Load Meet & Greet locations from admin
-            const meetAndGreetLocations = JSON.parse(localStorage.getItem('meetAndGreetLocations') || '{}');
             console.log('🤝 Available locations:', meetAndGreetLocations);
             
             let meetGreetRequired = false;
@@ -3070,8 +3147,7 @@
             // Check pickup location (fromLocation) - ALWAYS check for outbound trips
             if (fromLocation) {
                 console.log('🤝 Checking Meet & Greet for PICKUP location:', fromLocation);
-                // Simple Meet & Greet check for common locations
-                const pickupCheck = checkSimpleMeetAndGreet(fromLocation);
+                const pickupCheck = checkMeetAndGreetRequired(fromLocation);
                 
                 if (pickupCheck.required) {
                     meetGreetRequired = true;
@@ -3088,7 +3164,7 @@
             // For return trips, check if the return pickup location (= original destination) requires Meet & Greet
             if (hasReturnTrip && toLocation) {
                 console.log('🤝 Checking Meet & Greet for RETURN PICKUP location (return trip):', toLocation);
-                const returnPickupCheck = checkSimpleMeetAndGreet(toLocation);
+                const returnPickupCheck = checkMeetAndGreetRequired(toLocation);
                 
                 if (returnPickupCheck.required) {
                     meetGreetRequired = true;
@@ -3111,7 +3187,7 @@
                 
                 if (isMeetGreetEnabled) {
                     // Auto-enable Meet & Greet surcharge - ALWAYS base price regardless of trip count
-                    const basePrice = meetGreetItem ? meetGreetItem.price : 0;
+                    const basePrice = meetGreetItem ? meetGreetItem.price : 5;
                     const totalPrice = basePrice; // Fixed price per booking, not per location
                     
                     selectedSurcharges['meet-greet'] = {
@@ -3154,6 +3230,82 @@
             }
         }
 
+        // 🚫 DISABLED: Enhanced function to show Meet & Greet notification for multiple locations
+        // NOTE: Meet & Greet instructions are now sent via email instead of shown in STAP 2
+        function showEnhancedMeetAndGreetNotification(allLocations, totalPrice) {
+            console.log('⚠️ showEnhancedMeetAndGreetNotification called but DISABLED - instructions sent via email');
+            return; // Exit early - no longer show notifications in STAP 2
+            // Find or create notification area
+            let notificationArea = document.getElementById('meetGreetNotification');
+            
+            if (!notificationArea) {
+                notificationArea = document.createElement('div');
+                notificationArea.id = 'meetGreetNotification';
+                notificationArea.style.cssText = `
+                    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+                    border: 1px solid #c3e6cb;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 20px 0;
+                    border-left: 4px solid #28a745;
+                    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1);
+                `;
+                
+                // Insert after vehicle selection but before surcharge section
+                const surchargeSection = document.getElementById('surchargeSection');
+                surchargeSection.parentNode.insertBefore(notificationArea, surchargeSection);
+            }
+            
+            const meetGreetItem = surchargeItems.fixed.find(item => item.id === 'meet-greet');
+            const basePrice = meetGreetItem ? meetGreetItem.price : 5;
+            
+            // Create location summary
+            const locationSummary = allLocations.map(loc => {
+                const typeText = loc.type === 'pickup' ? 'Ophalen' : 'Terugbrengen';
+                return `${typeText}: ${loc.location.name}`;
+            }).join(' + ');
+            
+            notificationArea.innerHTML = `
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="background: #28a745; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px;">
+                        🤝
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #155724; font-size: 18px; font-weight: 600;">
+                            Meet & Greet Service Automatisch Toegevoegd
+                        </h4>
+                        <p style="margin: 5px 0 0 0; color: #155724; font-size: 14px;">
+                            ${locationSummary} • +€${totalPrice.toFixed(2)} ${allLocations.length > 1 ? `(${allLocations.length} × €${basePrice})` : ''}
+                        </p>
+                    </div>
+                </div>
+                ${allLocations.map((loc, index) => `
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <h5 style="margin: 0 0 10px 0; color: #155724; font-size: 16px;">
+                            📍 ${loc.type === 'pickup' ? 'Ophaal' : 'Afzet'}instructies - ${loc.location.name}:
+                        </h5>
+                        <p style="margin: 0; color: #155724; line-height: 1.5;">
+                            ${loc.instructions}
+                        </p>
+                    </div>
+                `).join('')}
+                <div style="text-align: center; margin-top: 15px;">
+                    <small style="color: #6c757d;">
+                        Deze service wordt automatisch toegepast voor ophaal- en afzetlocaties op luchthavens, stations en hotels.
+                        ${allLocations.length > 1 ? 'Voor retourritten wordt Meet & Greet twee keer berekend.' : ''}
+                    </small>
+                </div>
+            `;
+        }
+
+        // Legacy function for backward compatibility
+        function showMeetAndGreetNotification(location, instructions) {
+            showEnhancedMeetAndGreetNotification([{
+                type: 'pickup',
+                location: location,
+                instructions: instructions
+            }], 5);
+        }
 
         function renderSurchargeItems() {
             renderFixedSurchargeItems();
@@ -3227,7 +3379,7 @@
                         
                         // Check outbound pickup location
                         if (fromLocation) {
-                            const pickupCheck = checkSimpleMeetAndGreet(fromLocation);
+                            const pickupCheck = checkMeetAndGreetRequired(fromLocation);
                             if (pickupCheck.required) {
                                 shouldShow = true;
                                 console.log('✅ Meet & Greet required for outbound pickup:', fromLocation);
@@ -3236,7 +3388,7 @@
                         
                         // Check return pickup location
                         if (hasReturnTrip && toLocation) {
-                            const returnPickupCheck = checkSimpleMeetAndGreet(toLocation);
+                            const returnPickupCheck = checkMeetAndGreetRequired(toLocation);
                             if (returnPickupCheck.required) {
                                 shouldShow = true;
                                 console.log('✅ Meet & Greet required for return pickup:', toLocation);
@@ -4201,6 +4353,211 @@
         // Also call debug function after page load (backup)
         setTimeout(debugSurchargeSection, 2000);
 
+        // Manual test function for debugging Meet & Greet
+        function testMeetAndGreet() {
+            console.log('🧪 MANUAL TEST: Testing Meet & Greet detection');
+            
+            // Set test data
+            localStorage.setItem('fromLocation', 'Brussels Airport');
+            localStorage.setItem('toLocation', 'Antwerp Central');
+            localStorage.setItem('returnActive', 'false');
+            
+            console.log('✅ Test data set:');
+            console.log('   - fromLocation: Brussels Airport');
+            console.log('   - toLocation: Antwerp Central');
+            console.log('   - returnActive: false');
+            
+            // Clear previous selections but keep location surcharges
+            const currentSurcharges = selectedSurcharges;
+            selectedSurcharges = {};
+            // Restore location surcharges
+            for (const key in currentSurcharges) {
+                if (currentSurcharges[key].isLocationSurcharge) {
+                    selectedSurcharges[key] = currentSurcharges[key];
+                }
+            }
+            localStorage.setItem('selectedSurcharges', JSON.stringify(selectedSurcharges));
+            
+            // Re-run Meet & Greet detection
+            checkAndApplyMeetAndGreet();
+            updateSurchargeTotal();
+            renderSurchargeItems();
+            
+            console.log('🔍 Results:');
+            console.log('   - selectedSurcharges:', selectedSurcharges);
+            console.log('   - surchargeTotal:', surchargeTotal);
+            
+            // Show a visible alert
+            alert(`Meet & Greet Test Results:
+- selectedSurcharges: ${Object.keys(selectedSurcharges).length} items
+- surchargeTotal: €${surchargeTotal}
+- Meet & Greet found: ${selectedSurcharges['meet-greet'] ? 'YES' : 'NO'}`);
+        }
+
+        // Manual test function for return trip
+        function testMeetAndGreetReturn() {
+            console.log('🧪 MANUAL TEST: Testing Meet & Greet detection for RETURN trip');
+            
+            // Set test data - return trip where pickup is from airport
+            localStorage.setItem('fromLocation', 'Brussels Central');
+            localStorage.setItem('toLocation', 'Brussels Airport');
+            localStorage.setItem('returnActive', 'true');
+            
+            console.log('✅ Test data set:');
+            console.log('   - fromLocation: Brussels Central (NO Meet & Greet)');
+            console.log('   - toLocation: Brussels Airport (WILL need Meet & Greet for RETURN pickup)');
+            console.log('   - returnActive: true');
+            
+            // Clear previous selections but keep location surcharges
+            const currentSurcharges = selectedSurcharges;
+            selectedSurcharges = {};
+            // Restore location surcharges
+            for (const key in currentSurcharges) {
+                if (currentSurcharges[key].isLocationSurcharge) {
+                    selectedSurcharges[key] = currentSurcharges[key];
+                }
+            }
+            localStorage.setItem('selectedSurcharges', JSON.stringify(selectedSurcharges));
+            
+            // Re-run Meet & Greet detection
+            checkAndApplyMeetAndGreet();
+            updateSurchargeTotal();
+            renderSurchargeItems();
+            
+            console.log('🔍 Results:');
+            console.log('   - selectedSurcharges:', selectedSurcharges);
+            console.log('   - surchargeTotal:', surchargeTotal);
+            
+            // Show a visible alert
+            alert(`Meet & Greet Return Test Results:
+- Outbound: Brussels Central → NO Meet & Greet
+- Return: Brussels Airport pickup → SHOULD have Meet & Greet
+- Meet & Greet found: ${selectedSurcharges['meet-greet'] ? 'YES' : 'NO'}
+- Total surcharge: €${surchargeTotal}`);
+        }
+
+        // Test function for when going TO airport (should NOT have Meet & Greet)
+        function testGoingToAirport() {
+            console.log('🧪 MANUAL TEST: Testing going TO airport (should NOT have Meet & Greet)');
+            
+            // Set test data - going TO airport
+            localStorage.setItem('fromLocation', 'Brussels Central');
+            localStorage.setItem('toLocation', 'Brussels Airport');
+            localStorage.setItem('returnActive', 'false');
+            
+            console.log('✅ Test data set:');
+            console.log('   - fromLocation: Brussels Central');
+            console.log('   - toLocation: Brussels Airport (going TO airport)');
+            console.log('   - returnActive: false');
+            
+            // Clear previous selections but keep location surcharges
+            const currentSurcharges = selectedSurcharges;
+            selectedSurcharges = {};
+            // Restore location surcharges
+            for (const key in currentSurcharges) {
+                if (currentSurcharges[key].isLocationSurcharge) {
+                    selectedSurcharges[key] = currentSurcharges[key];
+                }
+            }
+            localStorage.setItem('selectedSurcharges', JSON.stringify(selectedSurcharges));
+            
+            // Re-run Meet & Greet detection and re-render
+            checkAndApplyMeetAndGreet();
+            updateSurchargeTotal();
+            renderSurchargeItems();
+            
+            console.log('🔍 Results:');
+            console.log('   - selectedSurcharges:', selectedSurcharges);
+            console.log('   - surchargeTotal:', surchargeTotal);
+            
+            // Check if Meet & Greet checkbox exists in DOM
+            const meetGreetCheckbox = document.getElementById('surcharge_meet-greet');
+            const checkboxExists = meetGreetCheckbox !== null;
+            
+            // Show a visible alert
+            alert(`Going TO Airport Test Results:
+- From: Brussels Central (not airport)
+- To: Brussels Airport (going TO airport)
+- Meet & Greet checkbox should NOT appear
+- Meet & Greet checkbox exists: ${checkboxExists ? 'YES (ERROR!)' : 'NO (CORRECT!)'}
+- Meet & Greet selected: ${selectedSurcharges['meet-greet'] ? 'YES (ERROR!)' : 'NO (CORRECT!)'}
+- Total surcharge: €${surchargeTotal}`);
+        }
+
+        // Last-Minute Booking Functions
+        function checkLastMinuteBooking() {
+            console.log('⚡ Checking last-minute booking restrictions...');
+            
+            const travelDate = localStorage.getItem('travelDate');
+            const travelHour = localStorage.getItem('travelHour');
+            const travelMinute = localStorage.getItem('travelMinute');
+            
+            if (!travelDate || !travelHour || !travelMinute) {
+                console.log('⚠️ Missing travel data, skipping last-minute check');
+                return;
+            }
+            
+            // Use admin panel functions
+            const lastMinuteCheck = isLastMinuteBooking(travelDate, travelHour, travelMinute);
+            
+            if (lastMinuteCheck.isLastMinute) {
+                if (lastMinuteCheck.mode === 'block') {
+                    // Block the booking
+                    showLastMinuteBlockedMessage(lastMinuteCheck.settings);
+                } else if (lastMinuteCheck.mode === 'surcharge') {
+                    // Show surcharge warning
+                    showLastMinuteSurchargeWarning(lastMinuteCheck.settings);
+                }
+            }
+        }
+        
+        function showLastMinuteBlockedMessage(settings) {
+            console.log('🚫 Blocking last-minute booking');
+            
+            // Create blocking overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            const message = document.createElement('div');
+            message.style.cssText = `
+                background: white;
+                padding: 40px;
+                border-radius: 15px;
+                text-align: center;
+                max-width: 500px;
+                margin: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            `;
+            
+            message.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 20px;">🚫</div>
+                <h2 style="color: #dc3545; margin-bottom: 15px;">Booking Niet Mogelijk</h2>
+                <p style="color: #666; margin-bottom: 20px; line-height: 1.6;">
+                    Boekingen binnen <strong>${settings.hours} uur</strong> voor vertrek zijn niet toegestaan.
+                </p>
+                <p style="color: #666; margin-bottom: 25px;">
+                    Kies een vertrek datum/tijd die minimaal ${settings.hours} uur in de toekomst ligt.
+                </p>
+                <button onclick="window.location.href='booking-exact.html'" 
+                        style="background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                    Terug naar STAP 1
+                </button>
+            `;
+            
+            overlay.appendChild(message);
+            document.body.appendChild(overlay);
+        }
         
         function showLastMinuteSurchargeWarning(settings) {
             console.log('⚡ Showing last-minute surcharge warning');
