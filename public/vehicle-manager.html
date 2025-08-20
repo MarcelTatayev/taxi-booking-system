@@ -397,7 +397,7 @@
                         id: 'saloon',
                         name: 'Saloon',
                         description: 'Comfortable sedan car',
-                        image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=1000&h=563',
+                        image: '',
                         passengers: 3,
                         luggage: 3,
                         handLuggage: 3,
@@ -408,7 +408,7 @@
                         id: 'estate',
                         name: 'Estate',
                         description: 'Spacious family car',
-                        image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1000&h=563',
+                        image: '',
                         passengers: 4,
                         luggage: 6,
                         handLuggage: 6,
@@ -419,7 +419,7 @@
                         id: 'minivan',
                         name: 'Minivan',
                         description: 'Large capacity vehicle',
-                        image: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1000&h=563',
+                        image: '',
                         passengers: 6,
                         luggage: 8,
                         handLuggage: 8,
@@ -430,7 +430,7 @@
                         id: 'minivan-long',
                         name: 'Minivan Long',
                         description: 'Extra large capacity vehicle',
-                        image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1000&h=563',
+                        image: '',
                         passengers: 8,
                         luggage: 12,
                         handLuggage: 12,
@@ -537,7 +537,7 @@
             }
 
             const imagePreview = document.getElementById('imagePreview');
-            const imageUrl = imagePreview.style.display === 'block' ? imagePreview.src : 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1000&h=563';
+            const imageUrl = imagePreview.style.display === 'block' ? imagePreview.src : '';
 
             const vehicleData = {
                 id: editingId || generateId(name),
@@ -618,9 +618,6 @@
                     childSeats: v.childSeats,
                     active: v.active
                 }));
-            
-            // Store in the same key that step2.html uses
-            localStorage.setItem('taxiVehicles', JSON.stringify(bookingVehicles));
         }
 
         function showSuccess(message) {
@@ -630,8 +627,6 @@
             setTimeout(() => msg.style.display = 'none', 3000);
         }
 
-        // Auto-sync every 2 seconds to ensure booking system stays updated
-        setInterval(syncToBookingSystem, 2000);
 
         // Close modal when clicking outside
         window.onclick = function(event) {

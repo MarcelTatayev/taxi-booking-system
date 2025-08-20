@@ -1,0 +1,8 @@
+{
+  "appId": "com.airports.topclient",
+  "appName": "Top Client",
+  "webDir": "apps/top-client/www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

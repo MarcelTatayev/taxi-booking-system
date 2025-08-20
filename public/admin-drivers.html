@@ -221,7 +221,15 @@
                 }
                 if (sectionName === 'dispatch') {
                     setTimeout(() => {
-                        if (typeof initDispatchSection === 'function') initDispatchSection();
+                        console.log('🚨 Activating Dispatch section...');
+                        if (typeof initDispatchSection === 'function') {
+                            initDispatchSection();
+                        } else {
+                            console.log('🔄 Calling initDispatchDateTime directly...');
+                            setTimeout(() => {
+                                initDispatchDateTime();
+                            }, 100);
+                        }
                     }, 200);
                 }
                 if (sectionName === 'vehicle-manager') {
@@ -1035,6 +1043,112 @@
         .text-nowrap { white-space: nowrap; }
         .page-title { font-size: 24px; font-weight: 600; color: #2c3e50; margin: 0 0 5px 0; }
         .page-subtitle { color: #6c757d; font-size: 16px; margin: 0 0 20px 0; }
+        
+        /* DISPATCH CALENDAR STYLING */
+        .dispatch-calendar {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .calendar-nav {
+            width: 28px;
+            height: 28px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-nav:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .calendar-month {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+
+        .calendar-day-header {
+            padding: 5px 2px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .calendar-day {
+            padding: 6px 2px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-day:hover {
+            background: #e3f2fd;
+            color: #007bff;
+        }
+
+        .calendar-day.today {
+            background: #007bff;
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.selected {
+            background: #28a745;
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.disabled:hover {
+            background: transparent;
+            color: #ccc;
+        }
     </style>
 </head>
 <body>
@@ -1209,6 +1323,11 @@
                                                style="width: 75%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white;">
                                     </div>
                                     
+                                    <!-- Extra Stops Container -->
+                                    <div id="dispatchExtraStopsContainer" style="margin-bottom: 10px;">
+                                        <!-- Extra stops will be dynamically added here -->
+                                    </div>
+                                    
                                     <!-- To Location -->
                                     <div style="position: relative; margin-bottom: 15px;">
                                         <input type="text" id="dispatchToLocation" placeholder="Address or Postcode" 
@@ -1216,9 +1335,15 @@
                                     </div>
                                     
                                     <!-- Right side controls - away from border -->
-                                    <div style="position: absolute; right: -10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 3px;">
-                                        <button onclick="addDispatchStop()" style="background: none; border: none; color: #666; font-size: 18px; cursor: pointer; padding: 2px; line-height: 1; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">+</button>
-                                        <button onclick="swapLocations()" style="background: none; border: none; color: #666; font-size: 14px; cursor: pointer; padding: 2px; line-height: 1; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">⇅</button>
+                                    <div style="position: absolute; right: -10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                                        <button onclick="addDispatchStop()" 
+                                                onmouseover="this.style.background='#e9ecef'; this.style.borderColor='#adb5bd';" 
+                                                onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='#dee2e6';"
+                                                style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #495057; font-size: 18px; cursor: pointer; padding: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">+</button>
+                                        <button onclick="swapLocations()" 
+                                                onmouseover="this.style.background='#e9ecef'; this.style.borderColor='#adb5bd';" 
+                                                onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='#dee2e6';"
+                                                style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #495057; font-size: 16px; cursor: pointer; padding: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">⇅</button>
                                     </div>
                                 </div>
                                 
@@ -7601,11 +7726,7 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
             }
         });
 
-        // Dispatch Calendar Variables
-        let dispatchCurrentDate = new Date();
-        let dispatchSelectedDate = null;
-        let dispatchReturnCurrentDate = new Date();
-        let dispatchReturnSelectedDate = null;
+        // Dispatch Variables
         let dispatchExtraStopCount = 0;
         let dispatchRetourActive = false;
 
@@ -7730,113 +7851,129 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
 
         function toggleDispatchCalendar() {
             const calendar = document.getElementById('dispatchCalendar');
+            const input = document.getElementById('dispatchDate');
             const isVisible = calendar.style.display === 'block';
             
-            // Close all other calendars/dropdowns
-            document.querySelectorAll('[id*="Calendar"]').forEach(cal => {
-                if (cal.id !== 'dispatchCalendar') cal.style.display = 'none';
-            });
-            
-            calendar.style.display = isVisible ? 'none' : 'block';
+            closeAllDispatchCalendars();
             
             if (!isVisible) {
-                generateDispatchCalendar();
+                showDispatchCalendar(calendar, input);
             }
+        }
+
+        function renderDispatchCalendar(calendarElement, displayDate, inputElement) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const year = displayDate.getFullYear();
+            const month = displayDate.getMonth();
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+            
+            const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                              'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+            const dayNames = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+            
+            let calendarHTML = `
+                <div class="calendar-header">
+                    <div class="calendar-nav" onclick="event.stopPropagation(); changeDispatchMonth(-1, '${calendarElement.id}', '${inputElement.id}'))">‹</div>
+                    <div class="calendar-month">${monthNames[month]} ${year}</div>
+                    <div class="calendar-nav" onclick="event.stopPropagation(); changeDispatchMonth(1, '${calendarElement.id}', '${inputElement.id}'))">›</div>
+                </div>
+                <div class="calendar-grid">`;
+            
+            // Day headers
+            dayNames.forEach(day => {
+                calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+            });
+            
+            // Empty cells for days before month starts
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                calendarHTML += `<div class="calendar-day disabled"></div>`;
+            }
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = new Date(year, month, day);
+                currentDate.setHours(0, 0, 0, 0);
+                const isToday = currentDate.getTime() === today.getTime();
+                const isSelected = inputElement.value === formatDispatchDate(currentDate);
+                const isPast = currentDate.getTime() < today.getTime();
+                
+                let dayClass = 'calendar-day';
+                if (isToday) dayClass += ' today';
+                if (isSelected) dayClass += ' selected';
+                if (isPast) dayClass += ' disabled';
+                
+                const onclick = isPast ? '' : `onclick="event.stopPropagation(); selectDispatchDate('${formatDispatchDate(currentDate)}', '${inputElement.id}')"`;
+                calendarHTML += `<div class="${dayClass}" ${onclick}>${day}</div>`;
+            }
+            
+            calendarHTML += '</div>';
+            calendarElement.innerHTML = calendarHTML;
+        }
+
+        function showDispatchCalendar(calendarElement, inputElement) {
+            const currentDate = inputElement.value ? parseDispatchDate(inputElement.value) : new Date();
+            renderDispatchCalendar(calendarElement, currentDate, inputElement);
+            calendarElement.style.display = 'block';
+            console.log('✅ Dispatch calendar shown');
+        }
+
+        function changeDispatchMonth(direction, calendarId, inputId) {
+            const calendarElement = document.getElementById(calendarId);
+            const inputElement = document.getElementById(inputId);
+            const currentDate = inputElement.value ? parseDispatchDate(inputElement.value) : new Date();
+            
+            const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1);
+            renderDispatchCalendar(calendarElement, newDate, inputElement);
+        }
+
+        // Make functions globally available
+        window.changeDispatchMonth = changeDispatchMonth;
+        window.selectDispatchDate = selectDispatchDate;
+
+        function selectDispatchDate(dateString, inputId) {
+            const inputElement = document.getElementById(inputId);
+            inputElement.value = dateString;
+            closeAllDispatchCalendars();
+            console.log(`📅 Selected dispatch date: ${dateString}`);
+        }
+
+        function formatDispatchDate(date) {
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function parseDispatchDate(dateString) {
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date();
+        }
+
+        function closeAllDispatchCalendars() {
+            document.querySelectorAll('[id*="Calendar"]').forEach(calendar => {
+                calendar.style.display = 'none';
+            });
         }
 
         function generateDispatchCalendar() {
-            const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni',
-                               'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
-            const dayNames = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+            console.log('📅 Generating dispatch calendar...');
+            const calendar = document.getElementById('dispatchCalendar');
+            const input = document.getElementById('dispatchDate');
             
-            const title = document.getElementById('dispatchCalendarTitle');
-            const grid = document.getElementById('dispatchCalendarGrid');
-            
-            title.textContent = `${monthNames[dispatchCurrentDate.getMonth()]} ${dispatchCurrentDate.getFullYear()}`;
-            
-            // Clear grid
-            grid.innerHTML = '';
-            
-            // Add day headers
-            dayNames.forEach(day => {
-                const dayHeader = document.createElement('div');
-                dayHeader.textContent = day;
-                dayHeader.style.cssText = 'font-weight: 600; padding: 8px; color: #666; font-size: 12px;';
-                grid.appendChild(dayHeader);
-            });
-            
-            // Get first day of month and number of days
-            const firstDay = new Date(dispatchCurrentDate.getFullYear(), dispatchCurrentDate.getMonth(), 1);
-            const lastDay = new Date(dispatchCurrentDate.getFullYear(), dispatchCurrentDate.getMonth() + 1, 0);
-            const startDay = (firstDay.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
-            
-            // Add empty cells for days before first day
-            for (let i = 0; i < startDay; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.style.cssText = 'padding: 8px;';
-                grid.appendChild(emptyCell);
+            if (!calendar || !input) {
+                console.error('❌ Calendar elements not found');
+                return;
             }
             
-            // Add days
-            const today = new Date();
-            for (let day = 1; day <= lastDay.getDate(); day++) {
-                const dayCell = document.createElement('div');
-                const cellDate = new Date(dispatchCurrentDate.getFullYear(), dispatchCurrentDate.getMonth(), day);
-                
-                dayCell.textContent = day;
-                dayCell.style.cssText = 'padding: 8px; cursor: pointer; border-radius: 6px; transition: all 0.3s; text-align: center; font-size: 14px;';
-                
-                // Style for today
-                if (cellDate.toDateString() === today.toDateString()) {
-                    dayCell.style.background = '#007bff';
-                    dayCell.style.color = 'white';
-                    dayCell.style.fontWeight = '600';
-                }
-                
-                // Style for selected date
-                if (dispatchSelectedDate && cellDate.toDateString() === dispatchSelectedDate.toDateString()) {
-                    dayCell.style.background = '#28a745';
-                    dayCell.style.color = 'white';
-                    dayCell.style.fontWeight = '600';
-                }
-                
-                // Disable past dates
-                if (cellDate < today.setHours(0,0,0,0)) {
-                    dayCell.style.color = '#ccc';
-                    dayCell.style.cursor = 'not-allowed';
-                } else {
-                    dayCell.addEventListener('click', () => selectDispatchDate(cellDate));
-                    dayCell.addEventListener('mouseenter', () => {
-                        if (cellDate >= today.setHours(0,0,0,0)) {
-                            dayCell.style.background = '#f8f9fa';
-                        }
-                    });
-                    dayCell.addEventListener('mouseleave', () => {
-                        if (!dispatchSelectedDate || cellDate.toDateString() !== dispatchSelectedDate.toDateString()) {
-                            if (cellDate.toDateString() !== today.toDateString()) {
-                                dayCell.style.background = 'transparent';
-                            }
-                        }
-                    });
-                }
-                
-                grid.appendChild(dayCell);
-            }
-        }
-
-        function changeDispatchMonth(direction) {
-            dispatchCurrentDate.setMonth(dispatchCurrentDate.getMonth() + direction);
-            generateDispatchCalendar();
-        }
-
-        function selectDispatchDate(date) {
-            dispatchSelectedDate = new Date(date);
-            const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-            
-            document.getElementById('dispatchDate').value = formattedDate;
-            document.getElementById('dispatchCalendar').style.display = 'none';
-            
-            generateDispatchCalendar(); // Refresh to show selection
+            showDispatchCalendar(calendar, input);
         }
 
         // 🚗 DISPATCH INITIALIZATION FUNCTIONS
@@ -7925,10 +8062,73 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
 
         // 🚗 DISPATCH UTILITY FUNCTIONS
         function addDispatchStop() {
-            // Add extra stop functionality
             console.log('➕ Adding extra stop...');
-            // This would add an extra stop input field between from and to locations
-            alert('Extra stop functionality - Coming soon!');
+            
+            if (dispatchExtraStopCount >= 7) {
+                alert('Maximum 7 extra stops toegestaan');
+                return;
+            }
+            
+            dispatchExtraStopCount++;
+            
+            const stopsContainer = document.getElementById('dispatchExtraStopsContainer');
+            if (!stopsContainer) {
+                console.error('❌ Extra stops container not found');
+                return;
+            }
+            
+            const stopDiv = document.createElement('div');
+            stopDiv.id = `dispatchExtraStop${dispatchExtraStopCount}`;
+            stopDiv.className = 'dispatch-extra-stop';
+            stopDiv.style.cssText = 'display: flex; gap: 10px; margin: 10px 0; align-items: center;';
+            
+            stopDiv.innerHTML = `
+                <input type="text" 
+                       id="dispatchExtraStopInput${dispatchExtraStopCount}"
+                       placeholder="Extra stop ${dispatchExtraStopCount}"
+                       style="flex: 1; padding: 15px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 16px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <button type="button" 
+                        onclick="removeDispatchExtraStop(${dispatchExtraStopCount})" 
+                        style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    ✕
+                </button>
+            `;
+            
+            stopsContainer.appendChild(stopDiv);
+            console.log(`✅ Extra stop ${dispatchExtraStopCount} added`);
+        }
+        
+        function removeDispatchExtraStop(stopNumber) {
+            console.log(`🗑️ Removing extra stop ${stopNumber}...`);
+            
+            const stopDiv = document.getElementById(`dispatchExtraStop${stopNumber}`);
+            if (stopDiv) {
+                stopDiv.remove();
+                
+                // Renumber remaining stops
+                const stopsContainer = document.getElementById('dispatchExtraStopsContainer');
+                const remainingStops = stopsContainer.querySelectorAll('.dispatch-extra-stop');
+                
+                dispatchExtraStopCount = 0;
+                remainingStops.forEach((stop, index) => {
+                    dispatchExtraStopCount++;
+                    const newNumber = dispatchExtraStopCount;
+                    
+                    stop.id = `dispatchExtraStop${newNumber}`;
+                    const input = stop.querySelector('input');
+                    const button = stop.querySelector('button');
+                    
+                    if (input) {
+                        input.id = `dispatchExtraStopInput${newNumber}`;
+                        input.placeholder = `Extra stop ${newNumber}`;
+                    }
+                    if (button) {
+                        button.setAttribute('onclick', `removeDispatchExtraStop(${newNumber})`);
+                    }
+                });
+                
+                console.log(`✅ Extra stop ${stopNumber} removed`);
+            }
         }
 
         function swapLocations() {
@@ -8054,109 +8254,29 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
         // Return Calendar Functions
         function toggleDispatchReturnCalendar() {
             const calendar = document.getElementById('dispatchReturnCalendar');
+            const input = document.getElementById('dispatchReturnDate');
             const isVisible = calendar.style.display === 'block';
             
-            calendar.style.display = isVisible ? 'none' : 'block';
+            closeAllDispatchCalendars();
             
             if (!isVisible) {
-                generateDispatchReturnCalendar();
+                showDispatchCalendar(calendar, input);
             }
         }
 
-        function generateDispatchReturnCalendar() {
-            const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni',
-                               'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
-            const dayNames = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
-            
-            const title = document.getElementById('dispatchReturnCalendarTitle');
-            const grid = document.getElementById('dispatchReturnCalendarGrid');
-            
-            title.textContent = `${monthNames[dispatchReturnCurrentDate.getMonth()]} ${dispatchReturnCurrentDate.getFullYear()}`;
-            
-            // Clear grid
-            grid.innerHTML = '';
-            
-            // Add day headers
-            dayNames.forEach(day => {
-                const dayHeader = document.createElement('div');
-                dayHeader.textContent = day;
-                dayHeader.style.cssText = 'font-weight: 600; padding: 8px; color: #666; font-size: 12px;';
-                grid.appendChild(dayHeader);
-            });
-            
-            // Get first day of month and number of days
-            const firstDay = new Date(dispatchReturnCurrentDate.getFullYear(), dispatchReturnCurrentDate.getMonth(), 1);
-            const lastDay = new Date(dispatchReturnCurrentDate.getFullYear(), dispatchReturnCurrentDate.getMonth() + 1, 0);
-            const startDay = (firstDay.getDay() + 6) % 7;
-            
-            // Add empty cells
-            for (let i = 0; i < startDay; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.style.cssText = 'padding: 8px;';
-                grid.appendChild(emptyCell);
-            }
-            
-            // Add days
-            const today = new Date();
-            for (let day = 1; day <= lastDay.getDate(); day++) {
-                const dayCell = document.createElement('div');
-                const cellDate = new Date(dispatchReturnCurrentDate.getFullYear(), dispatchReturnCurrentDate.getMonth(), day);
-                
-                dayCell.textContent = day;
-                dayCell.style.cssText = 'padding: 8px; cursor: pointer; border-radius: 6px; transition: all 0.3s; text-align: center; font-size: 14px;';
-                
-                // Style for today
-                if (cellDate.toDateString() === today.toDateString()) {
-                    dayCell.style.background = '#2196f3';
-                    dayCell.style.color = 'white';
-                    dayCell.style.fontWeight = '600';
-                }
-                
-                // Style for selected date
-                if (dispatchReturnSelectedDate && cellDate.toDateString() === dispatchReturnSelectedDate.toDateString()) {
-                    dayCell.style.background = '#28a745';
-                    dayCell.style.color = 'white';
-                    dayCell.style.fontWeight = '600';
-                }
-                
-                // Disable past dates
-                if (cellDate < today.setHours(0,0,0,0)) {
-                    dayCell.style.color = '#ccc';
-                    dayCell.style.cursor = 'not-allowed';
-                } else {
-                    dayCell.addEventListener('click', () => selectDispatchReturnDate(cellDate));
-                    dayCell.addEventListener('mouseenter', () => {
-                        if (cellDate >= today.setHours(0,0,0,0)) {
-                            dayCell.style.background = '#f8f9fa';
-                        }
-                    });
-                    dayCell.addEventListener('mouseleave', () => {
-                        if (!dispatchReturnSelectedDate || cellDate.toDateString() !== dispatchReturnSelectedDate.toDateString()) {
-                            if (cellDate.toDateString() !== today.toDateString()) {
-                                dayCell.style.background = 'transparent';
-                            }
-                        }
-                    });
-                }
-                
-                grid.appendChild(dayCell);
-            }
-        }
 
         function changeDispatchReturnMonth(direction) {
-            dispatchReturnCurrentDate.setMonth(dispatchReturnCurrentDate.getMonth() + direction);
-            generateDispatchReturnCalendar();
+            const calendarElement = document.getElementById('dispatchReturnCalendar');
+            const inputElement = document.getElementById('dispatchReturnDate');
+            const currentDate = inputElement.value ? parseDispatchDate(inputElement.value) : new Date();
+            
+            const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1);
+            renderDispatchCalendar(calendarElement, newDate, inputElement);
         }
 
-        function selectDispatchReturnDate(date) {
-            dispatchReturnSelectedDate = new Date(date);
-            const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-            
-            document.getElementById('dispatchReturnDate').value = formattedDate;
-            document.getElementById('dispatchReturnCalendar').style.display = 'none';
-            
-            generateDispatchReturnCalendar();
-        }
+        // Make return calendar function globally available
+        window.changeDispatchReturnMonth = changeDispatchReturnMonth;
+
 
         // Close calendars when clicking outside
         document.addEventListener('click', function(event) {
@@ -8169,6 +8289,261 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
         });
 
         // Dispatch Booking Functions
+        
+        // Check if booking is within 24 hours
+        function isWithin24Hours(travelDate, travelHour, travelMinute) {
+            const now = new Date();
+            const travelDateTime = new Date();
+            
+            // Parse DD/MM/YYYY format
+            const [day, month, year] = travelDate.split('/');
+            travelDateTime.setFullYear(parseInt(year), parseInt(month) - 1, parseInt(day));
+            travelDateTime.setHours(parseInt(travelHour), parseInt(travelMinute), 0, 0);
+            
+            const diffHours = (travelDateTime - now) / (1000 * 60 * 60);
+            return diffHours <= 24;
+        }
+        
+        // Send customer confirmation email
+        async function sendCustomerConfirmation(booking, isDriverAccepted = false) {
+            const emailConfig = JSON.parse(localStorage.getItem('emailConfig') || '{}');
+            
+            if (!emailConfig.smtpHost) {
+                console.error('Email not configured');
+                return;
+            }
+            
+            const confirmationType = isDriverAccepted ? 'Chauffeur Geaccepteerd' : 'Boeking Bevestigd';
+            const statusMessage = isDriverAccepted ? 
+                'Uw rit is geaccepteerd door een chauffeur. U ontvangt binnenkort contact voor verdere details.' :
+                'Uw boeking is bevestigd door onze administratie.';
+            
+            const emailContent = `
+                <h2>✅ ${confirmationType}</h2>
+                <p>${statusMessage}</p>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Boeking ID:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${booking.id}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Van:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${booking.trip.fromLocation}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Naar:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${booking.trip.toLocation}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Datum/Tijd:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${booking.trip.travelDate} om ${booking.trip.travelHour}:${booking.trip.travelMinute}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Voertuig:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${booking.vehicle.vehicle.name}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><strong>Totaal:</strong></td>
+                        <td style="padding: 10px;"><strong>€${booking.totalPrice.toFixed(2)}</strong></td>
+                    </tr>
+                </table>
+                <p style="color: #666; font-size: 14px;">
+                    Voor vragen kunt u contact opnemen via ons systeem.
+                </p>
+            `;
+            
+            try {
+                await fetch('https://airports-taxi.com/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: booking.customer.email,
+                        subject: `${confirmationType} - ${booking.id}`,
+                        html: emailContent
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to send customer confirmation:', error);
+            }
+        }
+        
+        // Manual admin acceptance for bookings >24 hours
+        function acceptBookingManually(bookingId) {
+            const confirmedBookings = JSON.parse(localStorage.getItem('confirmedBookings') || '[]');
+            const booking = confirmedBookings.find(b => b.id === bookingId);
+            
+            if (booking) {
+                booking.status = 'confirmed';
+                booking.confirmedAt = new Date().toISOString();
+                booking.acceptedBy = 'admin';
+                
+                localStorage.setItem('confirmedBookings', JSON.stringify(confirmedBookings));
+                
+                // Send customer confirmation
+                sendCustomerConfirmation(booking, false);
+                
+                // Update UI
+                loadBookings();
+                showSuccess('Boeking handmatig geaccepteerd! Klant ontvangt bevestiging.');
+            }
+        }
+        
+        // Driver acceptance for bookings <24 hours
+        function acceptBookingByDriver(bookingId, driverId) {
+            const confirmedBookings = JSON.parse(localStorage.getItem('confirmedBookings') || '[]');
+            const booking = confirmedBookings.find(b => b.id === bookingId);
+            const drivers = JSON.parse(localStorage.getItem('taxiDrivers') || '[]');
+            const driver = drivers.find(d => d.id === driverId);
+            
+            if (booking && driver) {
+                booking.status = 'confirmed';
+                booking.confirmedAt = new Date().toISOString();
+                booking.acceptedBy = 'driver';
+                booking.assignedDriver = {
+                    id: driver.id,
+                    name: driver.name,
+                    phone: driver.phone,
+                    vehicleId: driver.vehicleId
+                };
+                
+                // Update driver status
+                driver.status = 'assigned';
+                driver.currentBooking = bookingId;
+                
+                localStorage.setItem('confirmedBookings', JSON.stringify(confirmedBookings));
+                localStorage.setItem('taxiDrivers', JSON.stringify(drivers));
+                
+                // Send customer confirmation
+                sendCustomerConfirmation(booking, true);
+                
+                // Update UI
+                loadBookings();
+                loadDrivers();
+                showSuccess(`Boeking geaccepteerd door chauffeur ${driver.name}! Klant ontvangt bevestiging.`);
+            }
+        }
+        
+        // Get available drivers based on location
+        function getAvailableDrivers(pickupLocation) {
+            // Get all drivers from localStorage
+            const allDrivers = JSON.parse(localStorage.getItem('taxiDrivers') || '[]');
+            
+            // Detect country from pickup location
+            const country = detectCountryFromAddress(pickupLocation);
+            
+            // Filter drivers by:
+            // 1. Active status
+            // 2. Country/region match
+            // 3. Availability
+            return allDrivers.filter(driver => {
+                // Check if driver is active
+                if (!driver.active) return false;
+                
+                // Check if driver works in this country
+                if (driver.countries && !driver.countries.includes(country)) return false;
+                
+                // Check if driver is available (not on another ride)
+                if (driver.status === 'busy') return false;
+                
+                return true;
+            });
+        }
+        
+        // Send email to driver with booking preview
+        async function sendDriverEmail(driver, bookingPreview) {
+            const emailConfig = JSON.parse(localStorage.getItem('emailConfig') || '{}');
+            
+            if (!emailConfig.smtpHost) {
+                console.error('Email not configured');
+                return;
+            }
+            
+            const emailContent = `
+                <h2>🚖 Nieuwe Rit Beschikbaar</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Van:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${bookingPreview.from}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Naar:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${bookingPreview.to}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Datum/Tijd:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${bookingPreview.date} - ${bookingPreview.time}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Voertuig:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${bookingPreview.vehicle}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Passagiers:</strong></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${bookingPreview.passengers}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px;"><strong>Prijs:</strong></td>
+                        <td style="padding: 10px;"><strong>€${bookingPreview.price.toFixed(2)}</strong></td>
+                    </tr>
+                </table>
+                <div style="margin-top: 20px; text-align: center;">
+                    <a href="https://airports-taxi.com/driver-accept?id=${bookingPreview.bookingId}&driver=${driver.id}" 
+                       style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        ACCEPTEER RIT
+                    </a>
+                </div>
+            `;
+            
+            // Send email via your email service
+            // Implementation depends on your backend setup
+        }
+        
+        // Send push notification to driver app
+        function sendPushNotification(driver, bookingPreview) {
+            // This would integrate with your push notification service
+            // Example: Firebase Cloud Messaging, OneSignal, etc.
+            
+            const notification = {
+                to: driver.deviceToken,
+                title: '🚖 Nieuwe Rit!',
+                body: `${bookingPreview.from} → ${bookingPreview.to} (${bookingPreview.passengers} pers)`,
+                data: {
+                    bookingId: bookingPreview.bookingId,
+                    price: bookingPreview.price,
+                    vehicle: bookingPreview.vehicle
+                }
+            };
+            
+            // Send via push service
+        }
+        
+        // Send booking notification to drivers (without personal details)
+        async function sendDriverNotification(bookingData) {
+            const driverPreview = {
+                from: bookingData.fromLocation,
+                to: bookingData.toLocation,
+                date: bookingData.travelDate,
+                time: `${bookingData.travelHour}:${bookingData.travelMinute}`,
+                vehicle: bookingData.selectedVehicle,
+                passengers: bookingData.passengerCount,
+                price: bookingData.totalPrice,
+                bookingId: bookingData.id,
+                // NO personal data: name, email, phone
+            };
+            
+            // Get available drivers based on location
+            const drivers = getAvailableDrivers(bookingData.fromLocation);
+            
+            // Send notifications
+            drivers.forEach(driver => {
+                // Email notification
+                sendDriverEmail(driver, driverPreview);
+                
+                // App push notification (if implemented)
+                sendPushNotification(driver, driverPreview);
+            });
+        }
+        
         async function createDispatchBooking(event) {
             event.preventDefault();
             
@@ -8314,6 +8689,35 @@ Een bevestigingsmail wordt naar uw e-mailadres verzonden binnen 1 uur. ALS U GEE
                     // Add return booking to confirmed bookings
                     confirmedBookings.unshift(returnBooking);
                 }
+                localStorage.setItem('confirmedBookings', JSON.stringify(confirmedBookings));
+                
+                // 🚗 TIME-BASED DISPATCH LOGIC
+                const mainIsWithin24h = isWithin24Hours(mainBooking.trip.travelDate, mainBooking.trip.travelHour, mainBooking.trip.travelMinute);
+                
+                if (mainIsWithin24h) {
+                    // < 24 hours: Send to all drivers automatically
+                    mainBooking.status = 'pending_driver';
+                    await sendDriverNotification(mainBooking);
+                    showSuccess('Boeking binnen 24u: Automatisch naar chauffeurs gestuurd!');
+                } else {
+                    // > 24 hours: Admin handles manually
+                    mainBooking.status = 'pending_admin';
+                    showSuccess('Boeking >24u: Wacht op handmatige acceptatie door admin.');
+                }
+                
+                // Handle return trip if exists
+                if (returnBooking) {
+                    const returnIsWithin24h = isWithin24Hours(returnBooking.trip.travelDate, returnBooking.trip.travelHour, returnBooking.trip.travelMinute);
+                    
+                    if (returnIsWithin24h) {
+                        returnBooking.status = 'pending_driver';
+                        await sendDriverNotification(returnBooking);
+                    } else {
+                        returnBooking.status = 'pending_admin';
+                    }
+                }
+                
+                // Update bookings with new status
                 localStorage.setItem('confirmedBookings', JSON.stringify(confirmedBookings));
                 
                 // Send email notification for main booking
