@@ -2944,79 +2944,29 @@
         let surchargeTotal = 0;
         let lastSurchargeUpdateTime = 0;
 
-        // Enhanced Meet & Greet check function that uses admin settings
+        // Simple Meet & Greet check function
         function checkSimpleMeetAndGreet(location) {
             if (!location) return { required: false };
             
             const loc = location.toLowerCase();
             
-            // First, check admin-configured Meet & Greet locations
-            const meetAndGreetLocations = JSON.parse(localStorage.getItem('meetAndGreetLocations') || '{}');
-            
-            // Check if any admin location matches
-            for (const [key, locData] of Object.entries(meetAndGreetLocations)) {
-                if (locData.enabled && locData.meetGreetEnabled) {
-                    // Check if the location contains the configured name
-                    if (loc.includes(locData.name.toLowerCase())) {
-                        return {
-                            required: true,
-                            location: locData,
-                            instructions: locData.pickupInstructions || `Meet & Greet service at ${locData.name}`
-                        };
-                    }
-                    
-                    // Check aliases if available
-                    if (locData.aliases && Array.isArray(locData.aliases)) {
-                        for (const alias of locData.aliases) {
-                            if (loc.includes(alias.toLowerCase())) {
-                                return {
-                                    required: true,
-                                    location: locData,
-                                    instructions: locData.pickupInstructions || `Meet & Greet service at ${locData.name}`
-                                };
-                            }
-                        }
-                    }
-                }
+            // Check for airports
+            if (loc.includes('airport') || loc.includes('zaventem') || loc.includes('charleroi') || 
+                loc.includes('bru') || loc.includes('crl')) {
+                return { 
+                    required: true, 
+                    location: { name: location },
+                    instructions: 'Meet & Greet service at airport pickup'
+                };
             }
             
-            // Fallback: Check by category if enabled in admin
-            const meetGreetSettings = JSON.parse(localStorage.getItem('meetGreetCategorySettings') || '{"airports": true, "stations": true, "hotels": false}');
-            
-            // Check for airports (if category is enabled)
-            if (meetGreetSettings.airports) {
-                if (loc.includes('airport') || loc.includes('luchthaven') || loc.includes('aeroport') || 
-                    loc.includes('flughafen')) {
-                    return { 
-                        required: true, 
-                        location: { name: location },
-                        instructions: 'Meet & Greet service at airport pickup'
-                    };
-                }
-            }
-            
-            // Check for train stations (if category is enabled)
-            if (meetGreetSettings.stations) {
-                if (loc.includes('station') || loc.includes('central') || loc.includes('gare') || 
-                    loc.includes('bahnhof') || loc.includes('centraal')) {
-                    return { 
-                        required: true, 
-                        location: { name: location },
-                        instructions: 'Meet & Greet service at station pickup'
-                    };
-                }
-            }
-            
-            // Check for hotels (if category is enabled)
-            if (meetGreetSettings.hotels) {
-                if (loc.includes('hotel') || loc.includes('hilton') || loc.includes('marriott') || 
-                    loc.includes('ibis') || loc.includes('novotel') || loc.includes('mercure')) {
-                    return { 
-                        required: true, 
-                        location: { name: location },
-                        instructions: 'Meet & Greet service at hotel pickup'
-                    };
-                }
+            // Check for train stations
+            if (loc.includes('station') || loc.includes('central') || loc.includes('gare')) {
+                return { 
+                    required: true, 
+                    location: { name: location },
+                    instructions: 'Meet & Greet service at station pickup'
+                };
             }
             
             return { required: false };
