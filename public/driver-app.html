@@ -549,10 +549,10 @@
                 
                 <a href="#" class="nav-item" onclick="toggleSubmenu('jobs-submenu')">Jobs ▼</a>
                 <div class="nav-submenu" id="jobs-submenu">
-                    <a href="#" class="nav-item" onclick="showJobsPage('progress')">In Progress</a>
-                    <a href="#" class="nav-item" onclick="showJobsPage('awaiting')">Awaiting Approval</a>
-                    <a href="#" class="nav-item" onclick="showJobsPage('accepted')">Accepted</a>
-                    <a href="#" class="nav-item" onclick="showJobsPage('completed')">Completed</a>
+                    <a href="#" class="nav-item" onclick="event.stopPropagation(); showJobsPage('progress'); return false;">In Progress</a>
+                    <a href="#" class="nav-item" onclick="event.stopPropagation(); showJobsPage('awaiting'); return false;">Awaiting Approval</a>
+                    <a href="#" class="nav-item" onclick="event.stopPropagation(); showJobsPage('accepted'); return false;">Accepted</a>
+                    <a href="#" class="nav-item" onclick="event.stopPropagation(); showJobsPage('completed'); return false;">Completed</a>
                 </div>
 
                 <a href="#" class="nav-item" onclick="showCalendar()">Calendar</a>
@@ -779,6 +779,24 @@
             updateNavActive('jobs');
             currentPage = 'jobs';
             populateJobsTable(status);
+            
+            // Keep the jobs submenu open after selection
+            const jobsSubmenu = document.getElementById('jobs-submenu');
+            if (jobsSubmenu) {
+                jobsSubmenu.classList.add('open');
+            }
+            
+            // Update the page title to show current filter
+            const jobsTitle = document.querySelector('#jobs-section .page-title');
+            if (jobsTitle) {
+                switch(status) {
+                    case 'progress': jobsTitle.textContent = 'Jobs - In Progress'; break;
+                    case 'awaiting': jobsTitle.textContent = 'Jobs - Awaiting Approval'; break;
+                    case 'accepted': jobsTitle.textContent = 'Jobs - Accepted'; break;
+                    case 'completed': jobsTitle.textContent = 'Jobs - Completed'; break;
+                    default: jobsTitle.textContent = 'All Jobs'; break;
+                }
+            }
         }
 
         function showJobDetail(jobId) {
