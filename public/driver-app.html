@@ -76,20 +76,6 @@
             border-left-color: #3498db;
         }
 
-        .nav-submenu {
-            display: none;
-            background: rgba(0,0,0,0.2);
-        }
-
-        .nav-submenu.open {
-            display: block;
-        }
-
-        .nav-submenu .nav-item {
-            padding-left: 50px;
-            font-size: 14px;
-        }
-
         /* MOBILE MENU BUTTON */
         .menu-toggle {
             position: fixed;
@@ -547,13 +533,7 @@
             <div class="nav-menu">
                 <a href="#" class="nav-item active" onclick="showDashboard()">Dashboard</a>
                 
-                <a href="#" class="nav-item" onclick="toggleSubmenu('jobs-submenu')">Jobs</a>
-                <div class="nav-submenu" id="jobs-submenu">
-                    <a href="#" class="nav-item" onclick="showJobsPage('progress')">In Progress</a>
-                    <a href="#" class="nav-item" onclick="showJobsPage('awaiting')">Awaiting Approval</a>
-                    <a href="#" class="nav-item" onclick="showJobsPage('accepted')">Accepted</a>
-                    <a href="#" class="nav-item" onclick="showJobsPage('completed')">Completed</a>
-                </div>
+                <a href="#" class="nav-item" onclick="showJobsPage('all')">Jobs</a>
 
                 <a href="#" class="nav-item" onclick="showCalendar()">Calendar</a>
                 <a href="#" class="nav-item" onclick="showProfile()">Profile</a>
@@ -752,11 +732,6 @@
                 sidebar.classList.remove('open');
                 mainContent.classList.remove('sidebar-open');
             }
-        }
-
-        function toggleSubmenu(submenuId) {
-            const submenu = document.getElementById(submenuId);
-            submenu.classList.toggle('open');
         }
 
         // Navigation functions
