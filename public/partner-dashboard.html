@@ -634,69 +634,48 @@
             <section id="booking-section" class="content-section">
                 <div class="section-header">
                     <h1 class="section-title">Nieuwe Taxi Boeking</h1>
-                    <p class="section-subtitle">Boek een taxi voor uw klanten</p>
+                    <p class="section-subtitle">Gebruik het volledige booking systeem voor uw klanten</p>
                 </div>
 
-                <div class="content-card">
-                    <form class="booking-form" id="partner-booking-form">
-                        <!-- Customer Details -->
-                        <div class="form-group">
-                            <label class="form-label">Klant Naam *</label>
-                            <input type="text" class="form-input" id="customer-name" required
-                                   placeholder="Jan de Vries">
+                <div class="content-card" style="padding: 0; background: transparent; box-shadow: none;">
+                    <!-- Partner Booking iframe -->
+                    <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                        <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 18px;">Volledige Booking Interface</h3>
+                                <p style="margin: 0; font-size: 14px; opacity: 0.9;">STAP 1-2-3 systeem met alle opties en prijzen</p>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 10px;">
+                                Partner Markup: +€<span id="current-markup">10</span>
+                                <button onclick="loadPartnerMarkup()" style="background: rgba(255,255,255,0.3); border: none; padding: 4px 8px; border-radius: 12px; color: white; cursor: pointer; font-size: 12px;">🔄</button>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Klant Telefoon *</label>
-                            <input type="tel" class="form-input" id="customer-phone" required
-                                   placeholder="06-12345678">
+                        <iframe 
+                            id="partner-booking-iframe"
+                            src="booking-exact.html?partner=DEMO001&markup=5&staff=true&embedded=true"
+                            style="width: 100%; height: 800px; border: none; display: block;"
+                            onload="initializePartnerBooking()">
+                        </iframe>
+                        
+                        <!-- Debug info -->
+                        <div style="background: #f8f9fa; padding: 10px; margin-top: 10px; font-size: 12px; border-radius: 8px;">
+                            <strong>Debug Info:</strong><br>
+                            Current iframe URL: <span id="debug-iframe-url">Loading...</span><br>
+                            Partner markup: €<span id="debug-markup">Loading...</span><br>
+                            <button onclick="forceRefreshBooking()" style="margin-top: 5px; padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">🔄 Force Refresh Booking</button>
                         </div>
-
-                        <!-- Trip Details -->
-                        <div class="form-group full-width">
-                            <label class="form-label">Ophaaladres *</label>
-                            <input type="text" class="form-input" id="pickup-address" required
-                                   placeholder="Straat 123, 1234 AB Amsterdam">
-                        </div>
-                        <div class="form-group full-width">
-                            <label class="form-label">Bestemming *</label>
-                            <input type="text" class="form-input" id="destination-address" required
-                                   placeholder="Luchthaven Schiphol, 1118 CP Schiphol">
-                        </div>
-
-                        <!-- Date and Time -->
-                        <div class="form-group">
-                            <label class="form-label">Datum *</label>
-                            <input type="date" class="form-input" id="trip-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Tijd *</label>
-                            <input type="time" class="form-input" id="trip-time" required>
-                        </div>
-
-                        <!-- Vehicle and Passengers -->
-                        <div class="form-group">
-                            <label class="form-label">Aantal Passagiers</label>
-                            <select class="form-select" id="passenger-count">
-                                <option value="1">1 persoon</option>
-                                <option value="2">2 personen</option>
-                                <option value="3">3 personen</option>
-                                <option value="4">4 personen</option>
-                                <option value="5">5+ personen</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Voertuig Type</label>
-                            <select class="form-select" id="vehicle-type">
-                                <option value="saloon">Saloon (4 pers)</option>
-                                <option value="estate">Estate (4 pers)</option>
-                                <option value="minivan">Minivan (6 pers)</option>
-                                <option value="minivan-long">Minivan Long (8 pers)</option>
-                            </select>
-                        </div>
-
-                        <!-- Special Requirements -->
-                        <div class="form-group full-width">
-                            <label class="form-label">Bijzondere Verzoeken</label>
+                    </div>
+                    
+                    <!-- Booking Instructions -->
+                    <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #007bff;">
+                        <h4 style="color: #2c3e50; margin: 0 0 10px 0;">Instructies voor Receptie</h4>
+                        <ul style="color: #6c757d; margin: 0; padding-left: 20px;">
+                            <li>Gebruik dit systeem om taxi's te boeken voor hotelgasten</li>
+                            <li>Alle prijzen zijn automatisch verhoogd met uw partner markup</li>
+                            <li>U ontvangt commissie over elke boeking die u maakt</li>
+                            <li>Vul de klantgegevens in zoals u van de gast heeft ontvangen</li>
+                        </ul>
+                    </div>
                             <textarea class="form-input" id="special-requests" rows="3"
                                      placeholder="Kinderzitje, bagage, wachttijd, etc."></textarea>
                         </div>
@@ -1034,22 +1013,32 @@
 
         // Initialize booking form
         function initializeBookingForm() {
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
+            // Check if elements exist before accessing them
+            const tripDate = document.getElementById('trip-date');
+            const tripTime = document.getElementById('trip-time');
             
-            document.getElementById('trip-date').value = tomorrow.toISOString().split('T')[0];
-            document.getElementById('trip-date').min = today.toISOString().split('T')[0];
-            
-            const now = new Date();
-            const currentHour = now.getHours();
-            const nextHour = (currentHour + 2) % 24;
-            document.getElementById('trip-time').value = String(nextHour).padStart(2, '0') + ':00';
+            if (tripDate && tripTime) {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                tripDate.value = tomorrow.toISOString().split('T')[0];
+                tripDate.min = today.toISOString().split('T')[0];
+                
+                const now = new Date();
+                const currentHour = now.getHours();
+                const nextHour = (currentHour + 2) % 24;
+                tripTime.value = String(nextHour).padStart(2, '0') + ':00';
+            } else {
+                console.log('ℹ️ Booking form elements not found (using iframe instead)');
+            }
         }
 
         // Handle booking form submission
-        document.getElementById('partner-booking-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        const bookingForm = document.getElementById('partner-booking-form');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
             
             const formData = {
                 id: 'PB' + Date.now(),
@@ -1083,14 +1072,16 @@
             alert(`Boeking succesvol aangemaakt!\n\nBooking ID: #${formData.id}\nPrijs: €${formData.price}\nUw commissie: €${formData.commission.toFixed(2)}\n\nDe klant ontvangt een bevestiging via SMS.`);
             
             // Reset form and refresh data
-            document.getElementById('partner-booking-form').reset();
+            const form = document.getElementById('partner-booking-form');
+            if (form) form.reset();
             initializeBookingForm();
             loadPartnerData();
             loadBookings();
             
             // Switch to bookings view
             showSection('bookings');
-        });
+            });
+        }
 
         // Navigation
         function showSection(sectionName) {
@@ -1177,6 +1168,141 @@
                 window.location.href = 'partner-login.html';
             }
         }
+
+        // Get current partner ID from URL or session
+        function getCurrentPartnerId() {
+            // Check URL parameter first
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('partner')) {
+                return urlParams.get('partner');
+            }
+            
+            // Check session storage
+            const session = JSON.parse(localStorage.getItem('partnerSession') || '{}');
+            if (session.partnerId) {
+                return session.partnerId;
+            }
+            
+            // Default fallback
+            return 'demo-hotel';
+        }
+
+        // Load current partner markup from admin settings
+        function loadPartnerMarkup() {
+            try {
+                // Get current partner ID
+                const currentPartnerId = getCurrentPartnerId();
+                
+                // Get partners from admin settings
+                const partners = JSON.parse(localStorage.getItem('taxiPartners') || '[]');
+                
+                // Find current partner by ID or name
+                const currentPartner = partners.find(p => 
+                    p.id === currentPartnerId || 
+                    p.name.toLowerCase().includes(currentPartnerId.toLowerCase()) ||
+                    currentPartnerId.toLowerCase().includes(p.name.toLowerCase())
+                );
+                
+                let markup = 10; // default
+                let partnerName = currentPartnerId;
+                
+                if (currentPartner && currentPartner.markup !== undefined) {
+                    markup = currentPartner.markup;
+                    partnerName = currentPartner.name;
+                    console.log(`✅ Partner: ${partnerName}, Markup: €${markup}`);
+                } else {
+                    console.log(`⚠️ Partner ${currentPartnerId} not found in admin, using default markup: €${markup}`);
+                }
+                
+                // Update display
+                const markupElement = document.getElementById('current-markup');
+                if (markupElement) {
+                    markupElement.textContent = markup;
+                }
+                
+                // Update partner name in header if exists
+                const partnerNameElement = document.querySelector('.company-name');
+                if (partnerNameElement && currentPartner) {
+                    partnerNameElement.textContent = currentPartner.name;
+                }
+                
+                // Update iframe URL with correct markup (only if different)
+                const iframe = document.getElementById('partner-booking-iframe');
+                if (iframe) {
+                    const newSrc = `http://localhost:3000/booking-exact.html?partner=${currentPartnerId}&markup=${markup}&staff=true&embedded=true`;
+                    if (iframe.src !== newSrc) {
+                        iframe.src = newSrc;
+                        console.log(`🔄 Updated iframe for ${partnerName} with markup: €${markup}`);
+                    }
+                }
+                
+                return markup;
+            } catch (error) {
+                console.error('Error loading partner markup:', error);
+                return 10; // fallback
+            }
+        }
+
+        function initializePartnerBooking() {
+            console.log('Partner booking iframe loaded successfully');
+            loadPartnerMarkup();
+        }
+
+        // Check partner session on page load
+        function checkPartnerSession() {
+            const session = JSON.parse(localStorage.getItem('partnerSession') || 'null');
+            
+            if (!session || !session.expiresAt || session.expiresAt <= Date.now()) {
+                console.log('❌ No valid partner session found, redirecting to login');
+                window.location.href = 'partner-login.html';
+                return false;
+            }
+            
+            console.log('✅ Valid partner session found:', session.companyName);
+            return true;
+        }
+
+        // Load partner info into header
+        function loadPartnerInfo() {
+            const session = JSON.parse(localStorage.getItem('partnerSession') || 'null');
+            if (session) {
+                // Update company name in header
+                const companyNameEl = document.querySelector('.company-name');
+                if (companyNameEl) {
+                    companyNameEl.textContent = session.companyName || 'Partner';
+                }
+                
+                // Update user info
+                const userNameEl = document.querySelector('.user-details h3');
+                const userEmailEl = document.querySelector('.user-details p');
+                const avatarEl = document.querySelector('.user-avatar');
+                
+                if (userNameEl) userNameEl.textContent = session.contactPerson || 'Partner';
+                if (userEmailEl) userEmailEl.textContent = session.email || '';
+                if (avatarEl) avatarEl.textContent = (session.companyName || 'P').charAt(0).toUpperCase();
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // First check if partner is logged in
+            if (!checkPartnerSession()) {
+                return; // Will redirect to login
+            }
+            
+            // Load partner information
+            loadPartnerInfo();
+            
+            // Load initial data
+            loadPartnerMarkup();
+            loadBookings();
+            
+            // Refresh markup every 5 seconds to catch admin changes
+            setInterval(loadPartnerMarkup, 5000);
+            
+            // Also check for changes when user clicks back on the page
+            window.addEventListener('focus', loadPartnerMarkup);
+        });
     </script>
 </body>
 </html>

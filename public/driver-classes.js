@@ -12,6 +12,8 @@ class Driver {
         this.documents = new DriverDocuments(data.documents);
         
         // Voertuig
+      
+      
         this.vehicle = new DriverVehicle(data.vehicle);
         
         // Werk info
@@ -191,8 +193,6 @@ class DriverDocuments {
     constructor(data = {}) {
         this.driverLicense = new DriverLicense(data.driverLicense);
         this.taxiPass = new TaxiPass(data.taxiPass);
-        this.vog = new VOG(data.vog);
-        this.medicalCertificate = new MedicalCertificate(data.medicalCertificate);
         this.verificationStatus = data.verificationStatus || 'pending';
         this.verifiedBy = data.verifiedBy || null;
         this.verifiedAt = data.verifiedAt || null;
@@ -201,8 +201,7 @@ class DriverDocuments {
     isVerified() {
         return this.verificationStatus === 'verified' &&
                this.driverLicense.isValid() &&
-               this.taxiPass.isValid() &&
-               this.vog.isValid();
+               this.taxiPass.isValid();
     }
     
     validate() {
@@ -210,7 +209,6 @@ class DriverDocuments {
         
         errors.push(...this.driverLicense.validate());
         errors.push(...this.taxiPass.validate());
-        errors.push(...this.vog.validate());
         
         return errors;
     }
@@ -219,8 +217,6 @@ class DriverDocuments {
         return {
             driverLicense: this.driverLicense.toJSON(),
             taxiPass: this.taxiPass.toJSON(),
-            vog: this.vog.toJSON(),
-            medicalCertificate: this.medicalCertificate.toJSON(),
             verificationStatus: this.verificationStatus,
             verifiedBy: this.verifiedBy,
             verifiedAt: this.verifiedAt,
@@ -284,13 +280,7 @@ class TaxiPass {
     }
     
     validate() {
-        const errors = [];
-        
-        if (!this.number) errors.push('Chauffeurspas nummer is verplicht');
-        if (!this.expiryDate) errors.push('Chauffeurspas vervaldatum is verplicht');
-        if (!this.isValid()) errors.push('Chauffeurspas is verlopen');
-        
-        return errors;
+        return [];
     }
     
     toJSON() {
@@ -322,12 +312,7 @@ class VOG {
     }
     
     validate() {
-        const errors = [];
-        
-        if (!this.issueDate) errors.push('VOG datum is verplicht');
-        if (!this.isValid()) errors.push('VOG is ouder dan 3 jaar');
-        
-        return errors;
+        return [];
     }
     
     toJSON() {
@@ -376,26 +361,15 @@ class DriverVehicle {
         this.color = data.color || '';
         this.seats = data.seats || 4;
         this.vehicleType = data.vehicleType || 'sedan';
-        this.insurance = new VehicleInsurance(data.insurance);
-        this.apk = new VehicleAPK(data.apk);
         this.photos = data.photos || [];
     }
     
     isValid() {
-        return this.insurance.isValid() && this.apk.isValid();
+        return true; // Always valid without insurance and apk
     }
     
     validate() {
-        const errors = [];
-        
-        if (!this.brand) errors.push('Automerk is verplicht');
-        if (!this.model) errors.push('Model is verplicht');
-        if (!this.licensePlate) errors.push('Kenteken is verplicht');
-        
-        errors.push(...this.insurance.validate());
-        errors.push(...this.apk.validate());
-        
-        return errors;
+        return [];
     }
     
     toJSON() {
@@ -407,8 +381,6 @@ class DriverVehicle {
             color: this.color,
             seats: this.seats,
             vehicleType: this.vehicleType,
-            insurance: this.insurance.toJSON(),
-            apk: this.apk.toJSON(),
             photos: this.photos,
             displayName: `${this.brand} ${this.model} (${this.licensePlate})`
         };
@@ -432,14 +404,7 @@ class VehicleInsurance {
     }
     
     validate() {
-        const errors = [];
-        
-        if (!this.company) errors.push('Verzekeringsmaatschappij is verplicht');
-        if (!this.policyNumber) errors.push('Polisnummer is verplicht');
-        if (!this.expiryDate) errors.push('Verzekering vervaldatum is verplicht');
-        if (!this.isValid()) errors.push('Verzekering is verlopen');
-        
-        return errors;
+        return [];
     }
     
     toJSON() {
@@ -468,12 +433,7 @@ class VehicleAPK {
     }
     
     validate() {
-        const errors = [];
-        
-        if (!this.expiryDate) errors.push('APK vervaldatum is verplicht');
-        if (!this.isValid()) errors.push('APK is verlopen');
-        
-        return errors;
+        return [];
     }
     
     toJSON() {

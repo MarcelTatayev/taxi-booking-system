@@ -88,6 +88,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Root route - serve booking page
+app.get('/', (req, res) => {
+  res.sendFile('booking-exact.html', { root: 'public' });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -896,6 +901,168 @@ app.use('*', (req, res) => {
     error: 'Route not found',
     path: req.originalUrl
   });
+});
+
+// Partner registration email endpoint
+app.post('/api/send-partner-email', async (req, res) => {
+  try {
+    const { emailType, partnerData, adminEmail = 'marceltataev@gmail.com' } = req.body;
+    console.info(`📧 Partner email request: ${emailType} for ${partnerData.email}`);
+    
+    // Email configuration (same as booking emails)
+    const smtpConfig = {
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER || 'info@airporttransfer.be',
+        pass: process.env.SMTP_PASS || ''
+      }
+    };
+
+    const transporter = nodemailer.createTransport(smtpConfig);
+
+    if (emailType === 'registration') {
+      // Email to partner
+      const partnerHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">Welkom bij Marcel's Taxi</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Partner Registratie Ontvangen</p>
+          </div>
+          <div style="background: white; padding: 30px; border: 1px solid #ddd; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #2c3e50;">Beste ${partnerData.contactPerson},</h2>
+            <p>Bedankt voor uw registratie als partner bij Marcel's Taxi.</p>
+            <p><strong>Uw registratie details:</strong></p>
+            <ul>
+              <li>Bedrijfsnaam: ${partnerData.companyName}</li>
+              <li>Partner Type: ${partnerData.partnerType}</li>
+              <li>Email: ${partnerData.email}</li>
+            </ul>
+            <p>Wij zullen uw aanvraag zo spoedig mogelijk beoordelen. U ontvangt een email zodra uw account is goedgekeurd.</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #666; font-size: 14px;">Met vriendelijke groet,<br>Marcel's Taxi Team</p>
+          </div>
+        </div>
+      `;
+
+      // Email to admin
+      const adminHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #ffc107; color: #856404; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">🚨 Nieuwe Partner Registratie</h1>
+          </div>
+          <div style="background: white; padding: 30px; border: 1px solid #ddd; border-radius: 0 0 10px 10px;">
+            <h2>Partner Details:</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Bedrijf:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${partnerData.companyName}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Type:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${partnerData.partnerType}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Contact:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${partnerData.contactPerson}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Email:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${partnerData.email}</td></tr>
+              <tr><td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Telefoon:</strong></td><td style="padding: 10px; border-bottom: 1px solid #eee;">${partnerData.phone}</td></tr>
+            </table>
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+              <p style="margin: 0;"><strong>Actie vereist:</strong> Log in op het admin panel om deze registratie te beoordelen.</p>
+              <a href="http://localhost:3000/admin-partners.html" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Open Admin Panel</a>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Send emails
+      await transporter.sendMail({
+        from: '"Marcel\'s Taxi" <info@airporttransfer.be>',
+        to: partnerData.email,
+        subject: 'Bedankt voor uw registratie - Marcel\'s Taxi',
+        html: partnerHtml
+      });
+
+      await transporter.sendMail({
+        from: '"Marcel\'s Taxi System" <info@airporttransfer.be>',
+        to: adminEmail,
+        subject: '🚨 Nieuwe Partner Registratie - ' + partnerData.companyName,
+        html: adminHtml
+      });
+
+      res.json({ success: true, message: 'Registration emails sent successfully' });
+
+    } else if (emailType === 'approved') {
+      // Approval email
+      const approvalHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #28a745, #218838); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">✅ Account Goedgekeurd!</h1>
+          </div>
+          <div style="background: white; padding: 30px; border: 1px solid #ddd; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #28a745;">Gefeliciteerd ${partnerData.contactPerson}!</h2>
+            <p>Uw partner account is goedgekeurd. U kunt nu inloggen en boekingen maken voor uw klanten.</p>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Login Gegevens:</h3>
+              <p><strong>Email:</strong> ${partnerData.email}<br>
+              <strong>Wachtwoord:</strong> ${partnerData.password}<br>
+              <strong>Login URL:</strong> <a href="http://localhost:3000/partner-login.html">Partner Login</a></p>
+            </div>
+            
+            <p><strong>Uw voordelen:</strong></p>
+            <ul>
+              <li>Maak boekingen voor uw klanten</li>
+              <li>Speciale partner prijzen</li>
+              <li>Volg al uw boekingen</li>
+              <li>Maandelijkse commissie overzichten</li>
+            </ul>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #666; font-size: 14px;">Welkom bij ons netwerk!<br>Marcel's Taxi Team</p>
+          </div>
+        </div>
+      `;
+
+      await transporter.sendMail({
+        from: '"Marcel\'s Taxi" <info@airporttransfer.be>',
+        to: partnerData.email,
+        subject: '✅ Account Goedgekeurd - Marcel\'s Taxi',
+        html: approvalHtml
+      });
+
+      res.json({ success: true, message: 'Approval email sent successfully' });
+
+    } else if (emailType === 'rejected') {
+      // Rejection email
+      const rejectionHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #dc3545, #c82333); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">Registratie Status</h1>
+          </div>
+          <div style="background: white; padding: 30px; border: 1px solid #ddd; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #dc3545;">Beste ${partnerData.contactPerson},</h2>
+            <p>Helaas moeten wij u mededelen dat uw partner registratie niet is goedgekeurd.</p>
+            ${partnerData.reason ? `<p><strong>Reden:</strong> ${partnerData.reason}</p>` : ''}
+            <p>Voor vragen kunt u contact met ons opnemen via info@airporttransfer.be</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #666; font-size: 14px;">Met vriendelijke groet,<br>Marcel's Taxi Team</p>
+          </div>
+        </div>
+      `;
+
+      await transporter.sendMail({
+        from: '"Marcel\'s Taxi" <info@airporttransfer.be>',
+        to: partnerData.email,
+        subject: 'Registratie Status - Marcel\'s Taxi',
+        html: rejectionHtml
+      });
+
+      res.json({ success: true, message: 'Rejection email sent successfully' });
+    }
+
+  } catch (error) {
+    console.error('Partner email error:', error);
+    res.status(500).json({ 
+      error: 'Failed to send email', 
+      details: error.message,
+      suggestion: 'Check SMTP credentials in environment variables'
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

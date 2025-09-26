@@ -978,19 +978,71 @@
         // Load partners
         function loadPartners() {
             partners = JSON.parse(localStorage.getItem('taxiPartners') || '[]');
-            renderPartners();
-        }
-        
-        // Clear all demo data function (can be called from console)
-        function clearAllDemoData() {
-            if (confirm('Weet u zeker dat u alle partner data wilt wissen?')) {
-                localStorage.removeItem('taxiPartners');
-                localStorage.removeItem('pendingPartnerRegistrations');
-                partners = [];
-                renderPartners();
-                updateStats();
-                alert('Alle partner data is gewist!');
+            
+            // Add demo partners if none exist
+            if (partners.length === 0) {
+                partners = [
+                    {
+                        id: 'P001',
+                        name: 'Hilton Amsterdam',
+                        type: 'hotel',
+                        status: 'active',
+                        contact: 'Jan de Vries',
+                        email: 'jan@hiltonamsterdam.com',
+                        phone: '020-1234567',
+                        trips: 47,
+                        commission: 376,
+                        lastActivity: '2 uur geleden',
+                        registeredDate: '2024-01-15'
+                    },
+                    {
+                        id: 'P002', 
+                        name: 'TravelXpert BV',
+                        type: 'travel',
+                        status: 'active',
+                        contact: 'Marie Jansen',
+                        email: 'marie@travelxpert.nl',
+                        phone: '020-7654321',
+                        trips: 89,
+                        commission: 712,
+                        lastActivity: '1 dag geleden',
+                        registeredDate: '2024-01-20'
+                    },
+                    {
+                        id: 'P003',
+                        name: 'Restaurant De Kas',
+                        type: 'restaurant',
+                        status: 'pending',
+                        contact: 'Tom Bakker',
+                        email: 'tom@dekas.nl',
+                        phone: '020-9876543',
+                        trips: 3,
+                        commission: 18,
+                        lastActivity: '3 dagen geleden',
+                        registeredDate: '2024-02-01'
+                    },
+                    {
+                        id: 'DEMO001',
+                        name: 'Demo Partner',
+                        type: 'business',
+                        status: 'active',
+                        contact: 'Demo User',
+                        email: 'demo@partner.com',
+                        phone: '+32484900740',
+                        address: 'Demo Address',
+                        btwNumber: 'DEMO123',
+                        markup: 5,
+                        password: 'demo123',
+                        trips: 12,
+                        commission: 96,
+                        lastActivity: '1 uur geleden',
+                        registeredDate: '2024-09-01'
+                    }
+                ];
+                localStorage.setItem('taxiPartners', JSON.stringify(partners));
             }
+
+            renderPartners();
         }
 
         // Render partners table
@@ -1021,7 +1073,7 @@
                     <td>${partner.lastActivity}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="action-btn btn-edit" onclick="enablePartnerEdit('${partner.id}')">✏️</button>
+                            <button class="action-btn btn-edit" onclick="editPartner('${partner.id}')">✏️</button>
                             <button class="action-btn btn-delete" onclick="deletePartner('${partner.id}')">🗑️</button>
                         </div>
                     </td>
@@ -1074,7 +1126,7 @@
         function editPartner(id) {
             const partner = partners.find(p => p.id === id);
             if (partner) {
-                // Show partner details modal
+                // Create modal content with all partner details
                 const modalContent = `
                     <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
                         <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
@@ -1113,12 +1165,6 @@
                                                 <label style="color: #6c757d; font-size: 14px;">Email:</label>
                                                 <div style="color: #2c3e50; font-weight: 500;">${partner.email || 'Niet opgegeven'}</div>
                                             </div>
-                                            ${sessionStorage.getItem(`tempPassword_${partner.id}`) ? `
-                                            <div style="margin-bottom: 12px; background: #fff3cd; padding: 10px; border-radius: 5px;">
-                                                <label style="color: #856404; font-size: 14px;">🔐 Tijdelijk Wachtwoord (verdwijnt over 1 minuut):</label>
-                                                <div style="color: #856404; font-weight: bold; font-size: 16px;">${sessionStorage.getItem(`tempPassword_${partner.id}`)}</div>
-                                            </div>
-                                            ` : ''}
                                             <div style="margin-bottom: 12px;">
                                                 <label style="color: #6c757d; font-size: 14px;">Telefoon:</label>
                                                 <div style="color: #2c3e50; font-weight: 500;">${partner.phone || 'Niet opgegeven'}</div>
@@ -1223,9 +1269,6 @@
                                             ✅ Goedkeuren
                                         </button>
                                     ` : ''}
-                                    <button onclick="enablePartnerEdit('${partner.id}')" style="flex: 1; background: #007bff; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                                        ✏️ Bewerken
-                                    </button>
                                     <button onclick="closePartnerDetailModal()" style="flex: 1; background: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
                                         Sluiten
                                     </button>
@@ -1320,19 +1363,7 @@
             const container = document.getElementById('pending-registrations-container');
             const countBadge = document.getElementById('pending-count');
             
-            console.log('🔍 DEBUG: loadPendingRegistrations called');
-            console.log('🔍 DEBUG: pendingRegistrations count:', pendingRegistrations.length);
-            console.log('🔍 DEBUG: pendingRegistrations data:', pendingRegistrations);
-            console.log('🔍 DEBUG: container element:', container);
-            
-            if (countBadge) {
-                countBadge.textContent = `${pendingRegistrations.length} Wachtend`;
-            }
-            
-            if (!container) {
-                console.error('❌ ERROR: pending-registrations-container not found!');
-                return;
-            }
+            countBadge.textContent = `${pendingRegistrations.length} Wachtend`;
             
             if (pendingRegistrations.length === 0) {
                 container.innerHTML = `
@@ -1448,8 +1479,8 @@
             const commissionInput = document.getElementById(`commission-${registrationId}`);
             const commissionRate = parseFloat(commissionInput.value);
             
-            // Always use password from registration
-            const password = registration.password;
+            // Generate password
+            const password = 'partner' + Math.floor(Math.random() * 9999).toString().padStart(4, '0');
             
             // Create approved partner
             const approvedPartner = {
@@ -1481,42 +1512,12 @@
             partners.push(approvedPartner);
             localStorage.setItem('taxiPartners', JSON.stringify(partners));
             
-            // Temporarily store password for display (remove after 1 minute)
-            sessionStorage.setItem(`tempPassword_${approvedPartner.id}`, password);
-            setTimeout(() => {
-                sessionStorage.removeItem(`tempPassword_${approvedPartner.id}`);
-            }, 60000);
-            
             // Remove from pending
             const updatedPending = pendingRegistrations.filter(r => r.id !== registrationId);
             localStorage.setItem('pendingPartnerRegistrations', JSON.stringify(updatedPending));
             
-            // Send approval email
-            const emailSettings = JSON.parse(localStorage.getItem('emailSettings') || '{}');
-            fetch('/api/send-partner-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    emailType: 'approved',
-                    partnerData: {
-                        ...approvedPartner,
-                        password: password
-                    },
-                    emailSettings: emailSettings
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('✅ Approval email sent:', data);
-                alert(`Partner "${registration.companyName}" succesvol goedgekeurd!\n\nEen email met login gegevens is verzonden naar ${registration.email}.\n\nCommissie percentage: ${commissionRate}%`);
-            })
-            .catch(error => {
-                console.error('Email error:', error);
-                // Still show login details if email fails
-                alert(`Partner "${registration.companyName}" succesvol goedgekeurd!\n\nLET OP: Email verzending mislukt. Stuur handmatig:\n\nEmail: ${registration.email}\nWachtwoord: ${password}\nLogin URL: ${window.location.origin}/partner-login.html\n\nCommissie percentage: ${commissionRate}%`);
-            });
+            // Show success message with login details
+            alert(`Partner "${registration.companyName}" succesvol goedgekeurd!\n\nLogin gegevens (stuur naar partner):\nEmail: ${registration.email}\nWachtwoord: ${password}\nLogin URL: ${window.location.origin}/partner-login.html\n\nCommissie percentage: ${commissionRate}%`);
             
             // Refresh displays
             loadPendingRegistrations();
@@ -1762,112 +1763,6 @@ ${registration.additionalInfo || 'Geen aanvullende informatie opgegeven.'}
                 hideAddPartnerModal();
             }
         });
-        
-        // Enable partner editing
-        function enablePartnerEdit(partnerId) {
-            const partner = partners.find(p => p.id === partnerId);
-            if (!partner) return;
-            
-            // Create edit form
-            const editModal = `
-                <div id="edit-partner-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1001;">
-                    <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
-                        <div style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
-                            <h2 style="margin: 0;">✏️ Partner Bewerken</h2>
-                        </div>
-                        <form id="edit-partner-form" style="padding: 30px;">
-                            <div style="display: grid; gap: 20px;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">Bedrijfsnaam</label>
-                                    <input type="text" id="edit-name" value="${partner.name}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">Contact Persoon</label>
-                                    <input type="text" id="edit-contact" value="${partner.contact || ''}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">Email</label>
-                                    <input type="email" id="edit-email" value="${partner.email}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">Telefoon</label>
-                                    <input type="tel" id="edit-phone" value="${partner.phone || ''}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">Adres</label>
-                                    <input type="text" id="edit-address" value="${partner.address || ''}" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">Markup (€ per boeking)</label>
-                                    <input type="number" id="edit-markup" value="${partner.markup || 0}" min="0" step="1" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px;">
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #495057;">Status</label>
-                                    <select id="edit-status" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px;">
-                                        <option value="active" ${partner.status === 'active' ? 'selected' : ''}>Actief</option>
-                                        <option value="pending" ${partner.status === 'pending' ? 'selected' : ''}>Wachtend</option>
-                                        <option value="inactive" ${partner.status === 'inactive' ? 'selected' : ''}>Inactief</option>
-                                    </select>
-                                </div>
-                                ${!partner.password ? `
-                                <div style="background: #fff3cd; padding: 15px; border-radius: 6px;">
-                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #856404;">🔐 Nieuw Wachtwoord (optioneel)</label>
-                                    <input type="text" id="edit-password" placeholder="Laat leeg om huidig wachtwoord te behouden" style="width: 100%; padding: 10px; border: 2px solid #ffeaa7; border-radius: 6px;">
-                                    <small style="color: #856404;">Alleen invullen als u het wachtwoord wilt wijzigen</small>
-                                </div>
-                                ` : ''}
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-top: 30px;">
-                                <button type="submit" style="flex: 1; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                                    💾 Opslaan
-                                </button>
-                                <button type="button" onclick="closeEditModal()" style="flex: 1; background: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                                    Annuleren
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-            
-            // Add modal to page
-            document.body.insertAdjacentHTML('beforeend', editModal);
-            
-            // Handle form submission
-            document.getElementById('edit-partner-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Update partner data
-                partner.name = document.getElementById('edit-name').value;
-                partner.contact = document.getElementById('edit-contact').value;
-                partner.email = document.getElementById('edit-email').value;
-                partner.phone = document.getElementById('edit-phone').value;
-                partner.address = document.getElementById('edit-address').value;
-                partner.markup = parseInt(document.getElementById('edit-markup').value) || 0;
-                partner.status = document.getElementById('edit-status').value;
-                
-                // Update password if provided
-                const newPassword = document.getElementById('edit-password')?.value;
-                if (newPassword) {
-                    partner.password = newPassword;
-                }
-                
-                // Save to localStorage
-                localStorage.setItem('taxiPartners', JSON.stringify(partners));
-                
-                // Close modals and refresh
-                closeEditModal();
-                closePartnerDetailModal();
-                renderPartners();
-                
-                alert('Partner succesvol bijgewerkt!');
-            });
-        }
-        
-        function closeEditModal() {
-            const modal = document.getElementById('edit-partner-modal');
-            if (modal) modal.remove();
-        }
     </script>
 </body>
 </html>

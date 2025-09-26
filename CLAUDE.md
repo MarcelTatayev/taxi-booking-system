@@ -69,7 +69,7 @@ cp step3.html step3-backup-$(date +%Y%m%d-%H%M).html
 - Reset naar STAP 1 na bevestiging
 - Navigatie: booking-exact.html ← step3.html → step2.html
 
-### Admin Systeem: `/Users/marcel/TaxiAppBoekingssysteem/public/admin-simple.html`
+### Admin Systeem: `/Users/marcel/TaxiAppBoekingssysteem/public/admin-drivers.html`
 **STATUS**: WERKEND - VERBONDEN MET STAP 2
 
 **Features**:
@@ -83,6 +83,8 @@ cp step3.html step3-backup-$(date +%Y%m%d-%H%M).html
   - €0.00 items automatisch verborgen in STAP 2
 - Directe verbinding met STAP 2 via localStorage
 - Admin link beschikbaar in STAP 2
+
+<!-- OUDE ADMIN (admin-simple.html) IS DEPRECATED - GEBRUIK admin-drivers.html -->
 
 ## 🎨 DESIGN SPECIFICATIES (EXACT AANHOUDEN)
 
@@ -249,7 +251,7 @@ cp step3.html step3-backup-$(date +%Y%m%d-%H%M).html
 - **STAP 1**: `/Users/marcel/TaxiAppBoekingssysteem/public/booking-exact.html`
 - **STAP 2**: `/Users/marcel/TaxiAppBoekingssysteem/public/step2.html`
 - **STAP 3**: `/Users/marcel/TaxiAppBoekingssysteem/public/step3.html`
-- **Admin**: `/Users/marcel/TaxiAppBoekingssysteem/public/admin-simple.html`
+- **Admin**: `/Users/marcel/TaxiAppBoekingssysteem/public/admin-drivers.html` <!-- (was: admin-simple.html) -->
 
 ### Backup Locatie:
 - **Backup map**: `/Users/marcel/TaxiAppBoekingssysteem/public/`

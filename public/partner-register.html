@@ -421,6 +421,20 @@
                     </div>
                 </div>
 
+                <!-- Password Section -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Wachtwoord *</label>
+                        <input type="password" class="form-input" id="password" required 
+                               placeholder="Minimaal 6 karakters" minlength="6" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Wachtwoord Bevestigen *</label>
+                        <input type="password" class="form-input" id="confirm-password" required 
+                               placeholder="Herhaal uw wachtwoord" minlength="6" maxlength="50">
+                    </div>
+                </div>
+
                 <!-- Additional Info -->
                 <div class="form-group full-width">
                     <label class="form-label">Aanvullende Informatie</label>
@@ -491,7 +505,7 @@
         function validateForm() {
             const requiredFields = [
                 'company-name', 'partner-type', 'company-address', 
-                'contact-person', 'email', 'phone', 'terms-agreement'
+                'contact-person', 'email', 'phone', 'password', 'confirm-password', 'terms-agreement'
             ];
             
             const errorDiv = document.getElementById('error-message');
@@ -525,6 +539,18 @@
                 errors.push('KvK nummer moet 8 cijfers bevatten');
             }
             
+            // Validate password
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (password.length < 6) {
+                errors.push('Wachtwoord moet minimaal 6 karakters bevatten');
+            }
+            
+            if (password !== confirmPassword) {
+                errors.push('Wachtwoorden komen niet overeen');
+            }
+            
             if (errors.length > 0) {
                 errorDiv.innerHTML = '<strong>Corrigeer de volgende fouten:</strong><br>' + errors.join('<br>');
                 errorDiv.style.display = 'block';
@@ -547,6 +573,7 @@
                 contactFunction: document.getElementById('contact-function').value,
                 email: document.getElementById('email').value,
                 phone: document.getElementById('phone').value,
+                password: document.getElementById('password').value,
                 expectedTrips: document.getElementById('expected-trips').value,
                 website: document.getElementById('website').value,
                 additionalInfo: document.getElementById('additional-info').value,
@@ -563,6 +590,26 @@
             const pendingPartners = JSON.parse(localStorage.getItem('pendingPartnerRegistrations') || '[]');
             pendingPartners.push(formData);
             localStorage.setItem('pendingPartnerRegistrations', JSON.stringify(pendingPartners));
+            
+            // Send registration email
+            fetch('/api/send-partner-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    emailType: 'registration',
+                    partnerData: formData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ Email sent:', data);
+            })
+            .catch(error => {
+                console.error('Email error:', error);
+                // Continue anyway - email is not critical
+            });
             
             // Show success message
             const successDiv = document.getElementById('success-message');

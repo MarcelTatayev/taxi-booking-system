@@ -1245,15 +1245,72 @@
             }
             
             console.log('✅ Validation passed, continuing to vehicles...');
-            window.location.href = 'step2.html';
+            
+            // Keep partner parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            let nextUrl = 'step2.html';
+            if (urlParams.has('partner')) {
+                nextUrl += '?partner=' + urlParams.get('partner');
+                if (urlParams.has('markup')) {
+                    nextUrl += '&markup=' + urlParams.get('markup');
+                }
+            }
+            
+            window.location.href = nextUrl;
         }
 
 
-        // Initialize page with DATUM text
+        // Partner markup detection
+        let partnerInfo = {
+            isPartner: false,
+            partnerId: null,
+            markup: 0,
+            isStaff: false,
+            isEmbedded: false
+        };
+
+        // Initialize page with partner detection
         document.addEventListener('DOMContentLoaded', function() {
+            // Check URL parameters for partner info
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('partner')) {
+                partnerInfo.isPartner = true;
+                partnerInfo.partnerId = urlParams.get('partner');
+                partnerInfo.markup = parseInt(urlParams.get('markup')) || 10;
+                partnerInfo.isStaff = urlParams.has('staff');
+                partnerInfo.isEmbedded = urlParams.has('embedded');
+                
+                console.log('🏨 Partner booking detected:', partnerInfo);
+                
+                // Show partner indicator if not embedded
+                if (!partnerInfo.isEmbedded) {
+                    showPartnerIndicator();
+                }
+                
+                // Store partner info for step 2 and 3 - ALLEEN als het een partner booking is
+                if (urlParams.has('partner')) {
+                    localStorage.setItem('partnerBookingInfo', JSON.stringify(partnerInfo));
+                }
+            }
+            
+            // Set default date text
             document.getElementById('travelDate').value = 'Datum';
             console.log('✅ Date field set to DATUM text');
         });
+
+        // Show partner booking indicator
+        function showPartnerIndicator() {
+            const container = document.querySelector('.booking-container');
+            const indicator = document.createElement('div');
+            indicator.innerHTML = `
+                <div style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; text-align: center;">
+                    <strong>Partner Booking</strong><br>
+                    Prijzen zijn aangepast voor ${partnerInfo.partnerId} (+€${partnerInfo.markup})
+                </div>
+            `;
+            container.insertBefore(indicator.firstElementChild, container.firstElementChild);
+        }
     </script>
 </body>
 </html>

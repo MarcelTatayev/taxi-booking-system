@@ -1452,8 +1452,9 @@
             
             // Update selected vehicle pricing data if a vehicle is already selected
             if (selectedVehicleOutbound) {
-                const vehicleId = selectedVehicleOutbound.vehicle.id;
+                const vehicleId = selectedVehicleOutbound.vehicle.id || getVehicleIdFromName(selectedVehicleOutbound.vehicle.name);
                 const basePricing = pricingData[vehicleId] || { minimumPrice: 50.00, pricePerKm: 2.00 };
+                basePricing.vehicleId = vehicleId; // Ensure vehicleId is included
                 const newPricing = calculateDistanceBasedPricing(basePricing);
                 
                 // Update the selected vehicle's pricing data
@@ -1465,8 +1466,9 @@
             }
             
             if (selectedVehicleReturn) {
-                const vehicleId = selectedVehicleReturn.vehicle.id;
+                const vehicleId = selectedVehicleReturn.vehicle.id || getVehicleIdFromName(selectedVehicleReturn.vehicle.name);
                 const basePricing = pricingData[vehicleId] || { minimumPrice: 50.00, pricePerKm: 2.00 };
+                basePricing.vehicleId = vehicleId; // Ensure vehicleId is included
                 const newPricing = calculateDistanceBasedPricing(basePricing);
                 
                 // Update the selected vehicle's pricing data
@@ -1482,58 +1484,136 @@
             // Return vehicle ID if available, otherwise fallback to saloon
             return basePricing.vehicleId || 'saloon';
         }
+        
+        function getVehicleIdFromName(vehicleName) {
+            // Convert vehicle name to ID for pricing lookup
+            const nameToId = {
+                'Saloon': 'saloon',
+                'Estate': 'estate', 
+                'Minivan': 'minivan',
+                'Minivan Long': 'minivan-long'
+            };
+            return nameToId[vehicleName] || vehicleName.toLowerCase().replace(/\s+/g, '-');
+        }
+
+        // FORCE Partner markup everywhere
+        function applyPartnerMarkup(price) {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('partner')) {
+                const markup = parseInt(urlParams.get('markup')) || 5;
+                console.log(`🚀 FORCE MARKUP: €${price} -> €${price + markup}`);
+                return price + markup;
+            }
+            
+            return price;
+        }
+        
+        // Override ALL price functions
+        const originalPrice = window.calculateVehiclePrice || function() { return 50; };
+        window.calculateVehiclePrice = function(vehicle) {
+            const basePrice = originalPrice.call(this, vehicle) || 50;
+            return applyPartnerMarkup(basePrice);
+        };
+
 
         function calculateDistanceBasedPricing(basePricing) {
             if (!distanceCalculated || calculatedDistance <= 0) {
                 // If distance is not calculated or invalid, use minimum price only
+                const minPrice = applyPartnerMarkup(basePricing.minimumPrice);
                 return {
-                    minimumPrice: basePricing.minimumPrice,
+                    minimumPrice: minPrice,
                     pricePerKm: basePricing.pricePerKm,
-                    isDistanceBased: false
+                    isDistanceBased: false,
+                    originalMinimum: basePricing.minimumPrice
                 };
             }
             
-            // 🆕 Load distance-based pricing configuration
-            const distancePricingSettings = JSON.parse(localStorage.getItem('distanceBasedPricing') || '{}');
-            const threshold = distancePricingSettings.threshold || 100; // Default 100km threshold
+            // 🆕 Load kilometer ranges from admin pricing
+            const vehicleId = basePricing.vehicleId || getVehicleIdFromPricing(basePricing);
+            const vehiclePricing = JSON.parse(localStorage.getItem('vehiclePricing') || '{}');
+            const distanceRanges = vehiclePricing[vehicleId]?.distanceRanges;
             
             let distancePrice = 0;
             let calculationDetails = '';
             
-            // Check if vehicle has long-distance pricing configured
-            const vehicleId = basePricing.vehicleId || getVehicleIdFromPricing(basePricing);
-            const longDistanceRate = distancePricingSettings.vehicles?.[vehicleId]?.longDistance;
-            
-            if (longDistanceRate && calculatedDistance > threshold) {
-                // 🎯 DISTANCE-BASED PRICING: Different rates for short vs long distances
-                const shortKm = threshold;
-                const longKm = calculatedDistance - threshold;
-                const shortPrice = shortKm * basePricing.pricePerKm;
-                const longPrice = longKm * longDistanceRate;
+            if (distanceRanges && distanceRanges.length > 0) {
+                // 🎯 USE KILOMETER RANGES FROM ADMIN
+                let remainingDistance = calculatedDistance;
+                let totalPrice = 0;
+                let priceBreakdown = [];
                 
-                distancePrice = shortPrice + longPrice;
-                calculationDetails = `${shortKm}km × €${basePricing.pricePerKm.toFixed(2)} + ${longKm}km × €${longDistanceRate.toFixed(2)} = €${shortPrice.toFixed(2)} + €${longPrice.toFixed(2)} = €${distancePrice.toFixed(2)}`;
+                for (let i = 0; i < distanceRanges.length; i++) {
+                    const range = distanceRanges[i];
+                    const rangeStart = range.min;
+                    const rangeEnd = range.max;
+                    const rangePrice = range.price;
+                    
+                    if (remainingDistance <= 0) break;
+                    
+                    // Calculate how many km fall in this range
+                    const effectiveStart = Math.max(rangeStart, calculatedDistance - remainingDistance);
+                    const effectiveEnd = Math.min(rangeEnd, calculatedDistance);
+                    const kmInRange = Math.max(0, effectiveEnd - effectiveStart);
+                    
+                    if (kmInRange > 0) {
+                        const rangeTotal = kmInRange * rangePrice;
+                        totalPrice += rangeTotal;
+                        priceBreakdown.push(`${kmInRange}km × €${rangePrice.toFixed(2)} = €${rangeTotal.toFixed(2)}`);
+                        
+                        console.log(`📊 Range ${i+1}: ${rangeStart}-${rangeEnd}km, ${kmInRange}km @ €${rangePrice.toFixed(2)} = €${rangeTotal.toFixed(2)}`);
+                    }
+                }
                 
-                console.log(`📊 🎯 DISTANCE-BASED: ${calculationDetails}`);
+                distancePrice = totalPrice;
+                calculationDetails = priceBreakdown.join(' + ') + ` = €${distancePrice.toFixed(2)}`;
+                
+                console.log(`📊 🎯 KILOMETER RANGES USED: ${calculationDetails}`);
             } else {
-                // 📊 STANDARD PRICING: Single rate for entire distance
+                // 📊 FALLBACK: Use standard pricing if no ranges configured
                 distancePrice = calculatedDistance * basePricing.pricePerKm;
                 calculationDetails = `${calculatedDistance}km × €${basePricing.pricePerKm.toFixed(2)} = €${distancePrice.toFixed(2)}`;
                 
-                console.log(`📊 Standard pricing: ${calculationDetails}`);
+                console.log(`📊 Standard pricing (no ranges): ${calculationDetails}`);
             }
             
-            // Use the higher of: minimum price OR distance-based price
-            const calculatedPrice = Math.max(distancePrice, basePricing.minimumPrice);
+            // 🎯 KILOMETER RANGES + MINIMUM CHECK: Use the higher of kilometer calculation OR minimum price
+            const adminMinimum = basePricing.minimumPrice || basePricing.minimum || 50.00;
+            let calculatedPrice;
+            
+            if (distanceRanges && distanceRanges.length > 0) {
+                // Use kilometer ranges calculation BUT respect minimum price
+                calculatedPrice = Math.max(distancePrice, adminMinimum);
+                
+                if (distancePrice >= adminMinimum) {
+                    console.log(`🎯 KILOMETER RANGES: Distance price €${distancePrice.toFixed(2)} > minimum €${adminMinimum} → using distance price`);
+                } else {
+                    console.log(`🎯 KILOMETER RANGES: Distance price €${distancePrice.toFixed(2)} < minimum €${adminMinimum} → using minimum price`);
+                }
+            } else {
+                // Standard: use higher of per-km calculation or minimum price
+                calculatedPrice = Math.max(distancePrice, adminMinimum);
+                console.log(`📊 STANDARD: Using max of distance (€${distancePrice.toFixed(2)}) or admin minimum (€${adminMinimum}): €${calculatedPrice.toFixed(2)}`);
+            }
+            
+            // Apply partner markup BEFORE rounding
+            const priceWithMarkup = applyPartnerMarkup(calculatedPrice);
             
             // Round up to next whole euro
-            const finalPrice = Math.ceil(calculatedPrice);
+            const finalPrice = Math.ceil(priceWithMarkup);
+            console.log(`💸 EXACT PRICE before rounding: €${priceWithMarkup.toFixed(2)} → rounded to €${finalPrice}`);
             
             // Determine if minimum or distance price was used (before rounding)
-            const usingMinimum = calculatedPrice === basePricing.minimumPrice;
+            const usingMinimum = (distanceRanges && distanceRanges.length > 0) ? 
+                (calculatedPrice === adminMinimum) : (calculatedPrice === adminMinimum);
             
             const tripText = hasReturnTrip ? ' (single direction - will be doubled in total)' : '';
-            const minimumText = usingMinimum ? `< min €${basePricing.minimumPrice} → using minimum` : '> min → using distance';
+            let minimumText;
+            if (distanceRanges && distanceRanges.length > 0) {
+                minimumText = '🎯 Using kilometer ranges (minimum ignored)';
+            } else {
+                minimumText = usingMinimum ? `< admin min €${adminMinimum} → using minimum` : `> admin min €${adminMinimum} → using distance`;
+            }
             console.log(`📊 Final: ${calculationDetails} ${minimumText} → rounded up to €${finalPrice}${tripText}`);
             
             return {
@@ -1546,9 +1626,9 @@
                 distanceCharge: distancePrice,
                 usingMinimum: usingMinimum,
                 hasReturnTrip: hasReturnTrip,
-                usedDistanceBasedRates: !!longDistanceRate && calculatedDistance > threshold,
-                threshold: threshold,
-                longDistanceRate: longDistanceRate
+                usedDistanceBasedRates: false,
+                threshold: 0,
+                longDistanceRate: 0
             };
         }
 
@@ -1851,7 +1931,8 @@
                     <div class="loading">
                         <h3>⚠️ Geen actieve voertuigen</h3>
                         <p>Configureer voertuigen in Admin → Types of Vehicles</p>
-                        <a href="admin-simple.html" target="_blank" class="admin-link">
+                        <!-- <a href="admin-simple.html" target="_blank" class="admin-link"> OUDE VERSIE -->
+                        <a href="admin-drivers.html" target="_blank" class="admin-link">
                             🔧 Open Admin Panel
                         </a>
                     </div>
@@ -2228,31 +2309,16 @@
         function goBack() {
             window.location.href = 'booking-exact.html';
         }
-
+        
         function goToStep(stepNumber) {
             if (stepNumber === 1) {
                 window.location.href = 'booking-exact.html';
             } else if (stepNumber === 3) {
-                if (hasReturnTrip) {
-                    if (!selectedVehicleOutbound || !selectedVehicleReturn) {
-                        alert('⚠️ Selecteer voertuigen voor zowel heen als terug reis');
-                        return;
-                    }
+                if (selectedVehicleOutbound) {
+                    window.location.href = 'step3.html';
                 } else {
-                    if (!selectedVehicleOutbound) {
-                        alert('⚠️ Selecteer eerst een voertuig voordat u naar STAP 3 gaat');
-                        return;
-                    }
+                    alert('Selecteer eerst een voertuig');
                 }
-                
-                // Save selections and go to STAP 3
-                const vehicleSelections = {
-                    outbound: selectedVehicleOutbound,
-                    return: selectedVehicleReturn,
-                    hasReturnTrip: hasReturnTrip
-                };
-                localStorage.setItem('selectedVehicleStep2', JSON.stringify(vehicleSelections));
-                window.location.href = 'step3.html';
             }
         }
 
@@ -4284,7 +4350,7 @@
             }
         }
         
-        // Admin panel functions (copied from admin-simple.html)
+        // Admin panel functions (copied from admin-drivers.html)
         function isLastMinuteBooking(travelDate, travelHour, travelMinute) {
             // Get travel data from localStorage if not provided as parameters
             if (!travelDate) {
